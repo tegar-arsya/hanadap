@@ -82,7 +82,7 @@ export default function UnitKerjaRequestPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     catatan,
-                    items: items.map((i) => ({ barangId: i.barangId, jumlah: i.jumlah })),
+                    items: items.map((i) => ({ barangId: i.barangId, jumlahDiminta: i.jumlah })),
                 }),
             });
 

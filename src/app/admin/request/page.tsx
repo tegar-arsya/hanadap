@@ -21,7 +21,7 @@ interface RequestItem {
     id: string;
     jumlahDiminta: number;
     jumlahDisetujui: number;
-    barang: { nama: string; satuan: string; stokTotal: number };
+    barang: { id: string; nama: string; satuan: string; stokTotal: number };
 }
 
 interface Request {
@@ -60,12 +60,23 @@ export default function AdminRequestPage() {
         fetchRequests();
     }, []);
 
-    const handleAction = async (id: string, action: "approve" | "reject") => {
+    const handleAction = async (request: Request, action: "approve" | "reject") => {
         try {
+            const status = action === "approve" ? "APPROVED" : "REJECTED";
+            const approvedItems = action === "approve"
+                ? request.items.map((item) => ({
+                    id: item.id,
+                    barangId: item.barang.id,
+                    barangNama: item.barang.nama,
+                    jumlahDiminta: item.jumlahDiminta,
+                    jumlahDisetujui: item.jumlahDiminta, // Default: setujui semua
+                }))
+                : [];
+
             const res = await fetch("/api/request", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ requestId: id, action }),
+                body: JSON.stringify({ requestId: request.id, status, approvedItems }),
             });
 
             if (res.ok) {
@@ -74,6 +85,9 @@ export default function AdminRequestPage() {
                     action === "approve" ? "success" : "info"
                 );
                 fetchRequests();
+            } else {
+                const error = await res.json();
+                showToast(error.error || "Gagal memproses request", "error");
             }
         } catch (error) {
             showToast("Gagal memproses request", "error");
@@ -151,7 +165,7 @@ export default function AdminRequestPage() {
                         colorPalette="red"
                         variant="outline"
                         size="sm"
-                        onClick={() => handleAction(request.id, "reject")}
+                        onClick={() => handleAction(request, "reject")}
                     >
                         <FiX />
                         Tolak
@@ -159,7 +173,7 @@ export default function AdminRequestPage() {
                     <Button
                         colorPalette="green"
                         size="sm"
-                        onClick={() => handleAction(request.id, "approve")}
+                        onClick={() => handleAction(request, "approve")}
                     >
                         <FiCheck />
                         Setujui
