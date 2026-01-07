@@ -1,13 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import styles from "./users.module.css";
-
-interface UnitKerja {
-    id: string;
-    nama: string;
-    kode: string;
-}
+import {
+    Box,
+    Heading,
+    Text,
+    VStack,
+    HStack,
+    Card,
+    Button,
+    Input,
+    Table,
+    Badge,
+    NativeSelect,
+    Dialog,
+    Field,
+    IconButton,
+    Group,
+} from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
+import { FiPlus, FiEdit, FiKey, FiUserX, FiUserCheck, FiSearch } from "react-icons/fi";
 
 interface User {
     id: string;
@@ -17,311 +29,278 @@ interface User {
     isActive: boolean;
     unitKerjaId: string | null;
     unitKerja: { nama: string; kode: string } | null;
-    createdAt: string;
+}
+
+interface UnitKerja {
+    id: string;
+    nama: string;
+    kode: string;
 }
 
 const ROLES = [
-    { value: "ADMIN", label: "Admin" },
-    { value: "KEPALA_UNIT", label: "Kepala Unit" },
-    { value: "UNIT_KERJA", label: "Unit Kerja" },
+    { value: "ADMIN", label: "Admin", color: "red" },
+    { value: "KEPALA_UNIT", label: "Kepala Unit", color: "orange" },
+    { value: "UNIT_KERJA", label: "Unit Kerja", color: "blue" },
 ];
 
 export default function AdminUsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [unitKerjaList, setUnitKerjaList] = useState<UnitKerja[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
-    const [editingUser, setEditingUser] = useState<User | null>(null);
-    const [showPasswordReset, setShowPasswordReset] = useState<string | null>(null);
+    const [search, setSearch] = useState("");
+    const [isOpen, setIsOpen] = useState(false);
+    const [isPwOpen, setIsPwOpen] = useState(false);
 
-    // Form states
+    const [editingUser, setEditingUser] = useState<User | null>(null);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [nama, setNama] = useState("");
     const [role, setRole] = useState("UNIT_KERJA");
     const [unitKerjaId, setUnitKerjaId] = useState("");
     const [newPassword, setNewPassword] = useState("");
+    const [selectedUserId, setSelectedUserId] = useState("");
+
+    const showToast = (title: string, type: "success" | "error" | "info") => {
+        toaster.create({ title, type });
+    };
 
     const fetchData = async () => {
-        try {
-            const [usersRes, unitRes] = await Promise.all([
-                fetch("/api/users"),
-                fetch("/api/unit-kerja"),
-            ]);
-            const usersData = await usersRes.json();
-            const unitData = await unitRes.json();
-            setUsers(usersData);
-            setUnitKerjaList(unitData);
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        } finally {
-            setLoading(false);
-        }
+        const [usersRes, unitRes] = await Promise.all([
+            fetch("/api/users"),
+            fetch("/api/unit-kerja"),
+        ]);
+        setUsers(await usersRes.json());
+        setUnitKerjaList(await unitRes.json());
+        setLoading(false);
     };
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    useEffect(() => { fetchData(); }, []);
 
     const resetForm = () => {
-        setEmail("");
-        setPassword("");
-        setNama("");
-        setRole("UNIT_KERJA");
-        setUnitKerjaId("");
         setEditingUser(null);
-        setShowForm(false);
+        setEmail(""); setPassword(""); setNama("");
+        setRole("UNIT_KERJA"); setUnitKerjaId("");
+        setIsOpen(false);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async () => {
         try {
             if (editingUser) {
-                // Update user
                 await fetch("/api/users", {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        id: editingUser.id,
-                        nama,
-                        role,
-                        unitKerjaId: unitKerjaId || null,
-                    }),
+                    body: JSON.stringify({ id: editingUser.id, nama, role, unitKerjaId: unitKerjaId || null }),
                 });
+                showToast("User berhasil diupdate", "success");
             } else {
-                // Create new user
                 await fetch("/api/users", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        email,
-                        password,
-                        nama,
-                        role,
-                        unitKerjaId: unitKerjaId || null,
-                    }),
+                    body: JSON.stringify({ email, password, nama, role, unitKerjaId: unitKerjaId || null }),
                 });
+                showToast("User berhasil ditambahkan", "success");
             }
             resetForm();
             fetchData();
         } catch (error) {
-            console.error("Error saving user:", error);
+            showToast("Gagal menyimpan user", "error");
         }
     };
 
     const handleEdit = (user: User) => {
         setEditingUser(user);
-        setEmail(user.email);
         setNama(user.nama);
         setRole(user.role);
         setUnitKerjaId(user.unitKerjaId || "");
-        setShowForm(true);
+        setIsOpen(true);
     };
 
     const handleToggleActive = async (user: User) => {
-        const action = user.isActive ? "nonaktifkan" : "aktifkan";
-        if (!confirm(`Yakin ingin ${action} user "${user.nama}"?`)) return;
-
-        try {
-            await fetch("/api/users", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    id: user.id,
-                    isActive: !user.isActive,
-                }),
-            });
-            fetchData();
-        } catch (error) {
-            console.error("Error toggling user:", error);
-        }
+        await fetch("/api/users", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: user.id, isActive: !user.isActive }),
+        });
+        showToast(user.isActive ? "User dinonaktifkan" : "User diaktifkan", "info");
+        fetchData();
     };
 
-    const handleResetPassword = async (userId: string) => {
-        if (!newPassword) return;
-
-        try {
-            await fetch("/api/users", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    id: userId,
-                    newPassword,
-                }),
-            });
-            setNewPassword("");
-            setShowPasswordReset(null);
-            alert("Password berhasil direset");
-        } catch (error) {
-            console.error("Error resetting password:", error);
-        }
+    const handleResetPassword = async () => {
+        await fetch("/api/users", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: selectedUserId, newPassword }),
+        });
+        showToast("Password berhasil direset", "success");
+        setNewPassword("");
+        setIsPwOpen(false);
     };
 
-    if (loading) return <div className={styles.loading}>Memuat...</div>;
+    const filtered = users.filter(u =>
+        u.nama.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase())
+    );
 
     return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <div>
-                    <h1 className={styles.title}>Manajemen User</h1>
-                    <p className={styles.subtitle}>Kelola akun pengguna sistem</p>
-                </div>
-                <button
-                    className={styles.addButton}
-                    onClick={() => {
-                        if (showForm) resetForm();
-                        else setShowForm(true);
-                    }}
-                >
-                    {showForm ? "Batal" : "+ Tambah User"}
-                </button>
-            </div>
+        <Box>
+            <HStack justify="space-between" mb={8}>
+                <VStack align="start" gap={1}>
+                    <Heading size="lg">Manajemen User</Heading>
+                    <Text color="gray.500">Kelola akun pengguna sistem</Text>
+                </VStack>
+                <Button colorPalette="blue" onClick={() => setIsOpen(true)}>
+                    <FiPlus />
+                    Tambah User
+                </Button>
+            </HStack>
 
-            {showForm && (
-                <form onSubmit={handleSubmit} className={styles.form}>
-                    <h3>{editingUser ? "Edit User" : "Tambah User Baru"}</h3>
-                    <div className={styles.formGrid}>
-                        {!editingUser && (
-                            <div className={styles.formGroup}>
-                                <label>Email</label>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className={styles.input}
-                                    placeholder="email@example.com"
-                                    required
-                                />
-                            </div>
-                        )}
-                        {!editingUser && (
-                            <div className={styles.formGroup}>
-                                <label>Password Awal</label>
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className={styles.input}
-                                    placeholder="Password"
-                                    required
-                                />
-                            </div>
-                        )}
-                        <div className={styles.formGroup}>
-                            <label>Nama Lengkap</label>
-                            <input
-                                type="text"
-                                value={nama}
-                                onChange={(e) => setNama(e.target.value)}
-                                className={styles.input}
-                                placeholder="Nama lengkap"
-                                required
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Role</label>
-                            <select
-                                value={role}
-                                onChange={(e) => setRole(e.target.value)}
-                                className={styles.select}
-                                required
-                            >
-                                {ROLES.map((r) => (
-                                    <option key={r.value} value={r.value}>
-                                        {r.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Unit Kerja</label>
-                            <select
-                                value={unitKerjaId}
-                                onChange={(e) => setUnitKerjaId(e.target.value)}
-                                className={styles.select}
-                            >
-                                <option value="">Tidak ada (Admin)</option>
-                                {unitKerjaList.map((unit) => (
-                                    <option key={unit.id} value={unit.id}>
-                                        {unit.nama} ({unit.kode})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                    <button type="submit" className={styles.submitBtn}>
-                        {editingUser ? "Update User" : "Simpan User"}
-                    </button>
-                </form>
-            )}
+            <Card.Root mb={6}>
+                <Card.Body>
+                    <Group>
+                        <FiSearch />
+                        <Input placeholder="Cari user..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                    </Group>
+                </Card.Body>
+            </Card.Root>
 
-            <div className={styles.table}>
-                <div className={styles.tableHeader}>
-                    <span>User</span>
-                    <span>Role</span>
-                    <span>Unit Kerja</span>
-                    <span>Status</span>
-                    <span>Aksi</span>
-                </div>
+            <Card.Root>
+                <Card.Body p={0}>
+                    <Table.Root>
+                        <Table.Header>
+                            <Table.Row bg="gray.50">
+                                <Table.ColumnHeader>User</Table.ColumnHeader>
+                                <Table.ColumnHeader>Role</Table.ColumnHeader>
+                                <Table.ColumnHeader>Unit Kerja</Table.ColumnHeader>
+                                <Table.ColumnHeader>Status</Table.ColumnHeader>
+                                <Table.ColumnHeader>Aksi</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {filtered.map((user) => (
+                                <Table.Row key={user.id} opacity={user.isActive ? 1 : 0.5}>
+                                    <Table.Cell>
+                                        <VStack align="start" gap={0}>
+                                            <Text fontWeight="medium">{user.nama}</Text>
+                                            <Text fontSize="sm" color="gray.500">{user.email}</Text>
+                                        </VStack>
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        <Badge colorPalette={ROLES.find(r => r.value === user.role)?.color}>
+                                            {ROLES.find(r => r.value === user.role)?.label}
+                                        </Badge>
+                                    </Table.Cell>
+                                    <Table.Cell>{user.unitKerja?.nama || "-"}</Table.Cell>
+                                    <Table.Cell>
+                                        <Badge colorPalette={user.isActive ? "green" : "gray"}>
+                                            {user.isActive ? "Aktif" : "Nonaktif"}
+                                        </Badge>
+                                    </Table.Cell>
+                                    <Table.Cell>
+                                        <HStack>
+                                            <IconButton aria-label="Edit" size="sm" onClick={() => handleEdit(user)}>
+                                                <FiEdit />
+                                            </IconButton>
+                                            <IconButton
+                                                aria-label="Reset Password"
+                                                size="sm"
+                                                onClick={() => { setSelectedUserId(user.id); setIsPwOpen(true); }}
+                                            >
+                                                <FiKey />
+                                            </IconButton>
+                                            <IconButton
+                                                aria-label="Toggle Active"
+                                                size="sm"
+                                                colorPalette={user.isActive ? "red" : "green"}
+                                                variant="ghost"
+                                                onClick={() => handleToggleActive(user)}
+                                            >
+                                                {user.isActive ? <FiUserX /> : <FiUserCheck />}
+                                            </IconButton>
+                                        </HStack>
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
+                        </Table.Body>
+                    </Table.Root>
+                </Card.Body>
+            </Card.Root>
 
-                {users.length === 0 ? (
-                    <div className={styles.empty}>Belum ada user</div>
-                ) : (
-                    users.map((user) => (
-                        <div
-                            key={user.id}
-                            className={`${styles.tableRow} ${!user.isActive ? styles.inactive : ""}`}
-                        >
-                            <div className={styles.userInfo}>
-                                <span className={styles.userName}>{user.nama}</span>
-                                <span className={styles.userEmail}>{user.email}</span>
-                            </div>
-                            <span className={`${styles.roleBadge} ${styles[user.role.toLowerCase()]}`}>
-                                {ROLES.find((r) => r.value === user.role)?.label || user.role}
-                            </span>
-                            <span>{user.unitKerja?.nama || "-"}</span>
-                            <span className={`${styles.statusBadge} ${user.isActive ? styles.active : styles.inactiveBadge}`}>
-                                {user.isActive ? "Aktif" : "Nonaktif"}
-                            </span>
-                            <div className={styles.actions}>
-                                <button className={styles.editBtn} onClick={() => handleEdit(user)}>
-                                    Edit
-                                </button>
-                                <button
-                                    className={styles.resetBtn}
-                                    onClick={() => setShowPasswordReset(showPasswordReset === user.id ? null : user.id)}
-                                >
-                                    Reset Password
-                                </button>
-                                <button
-                                    className={user.isActive ? styles.deactivateBtn : styles.activateBtn}
-                                    onClick={() => handleToggleActive(user)}
-                                >
-                                    {user.isActive ? "Nonaktifkan" : "Aktifkan"}
-                                </button>
-                            </div>
+            {/* Add/Edit Dialog */}
+            <Dialog.Root open={isOpen} onOpenChange={(e) => { if (!e.open) resetForm(); }}>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>
+                            <Dialog.Title>{editingUser ? "Edit User" : "Tambah User"}</Dialog.Title>
+                            <Dialog.CloseTrigger />
+                        </Dialog.Header>
+                        <Dialog.Body>
+                            <VStack gap={4}>
+                                {!editingUser && (
+                                    <>
+                                        <Field.Root required>
+                                            <Field.Label>Email</Field.Label>
+                                            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                        </Field.Root>
+                                        <Field.Root required>
+                                            <Field.Label>Password</Field.Label>
+                                            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                                        </Field.Root>
+                                    </>
+                                )}
+                                <Field.Root required>
+                                    <Field.Label>Nama</Field.Label>
+                                    <Input value={nama} onChange={(e) => setNama(e.target.value)} />
+                                </Field.Root>
+                                <Field.Root required>
+                                    <Field.Label>Role</Field.Label>
+                                    <NativeSelect.Root>
+                                        <NativeSelect.Field value={role} onChange={(e) => setRole(e.target.value)}>
+                                            {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                                        </NativeSelect.Field>
+                                    </NativeSelect.Root>
+                                </Field.Root>
+                                <Field.Root>
+                                    <Field.Label>Unit Kerja</Field.Label>
+                                    <NativeSelect.Root>
+                                        <NativeSelect.Field value={unitKerjaId} onChange={(e) => setUnitKerjaId(e.target.value)}>
+                                            <option value="">Tidak ada</option>
+                                            {unitKerjaList.map(u => <option key={u.id} value={u.id}>{u.nama}</option>)}
+                                        </NativeSelect.Field>
+                                    </NativeSelect.Root>
+                                </Field.Root>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button variant="ghost" mr={3} onClick={resetForm}>Batal</Button>
+                            <Button colorPalette="blue" onClick={handleSubmit}>Simpan</Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+            </Dialog.Root>
 
-                            {showPasswordReset === user.id && (
-                                <div className={styles.passwordReset}>
-                                    <input
-                                        type="password"
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                        className={styles.input}
-                                        placeholder="Password baru"
-                                    />
-                                    <button
-                                        className={styles.submitBtn}
-                                        onClick={() => handleResetPassword(user.id)}
-                                    >
-                                        Reset
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    ))
-                )}
-            </div>
-        </div>
+            {/* Reset Password Dialog */}
+            <Dialog.Root open={isPwOpen} onOpenChange={(e) => setIsPwOpen(e.open)}>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>
+                            <Dialog.Title>Reset Password</Dialog.Title>
+                            <Dialog.CloseTrigger />
+                        </Dialog.Header>
+                        <Dialog.Body>
+                            <Field.Root>
+                                <Field.Label>Password Baru</Field.Label>
+                                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                            </Field.Root>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button variant="ghost" mr={3} onClick={() => setIsPwOpen(false)}>Batal</Button>
+                            <Button colorPalette="blue" onClick={handleResetPassword} disabled={!newPassword}>Reset</Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+            </Dialog.Root>
+        </Box>
     );
 }

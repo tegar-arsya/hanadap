@@ -2,7 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import styles from "./profil.module.css";
+import {
+    Box,
+    Heading,
+    Text,
+    VStack,
+    Card,
+    Button,
+    Input,
+    Field,
+    HStack,
+    Avatar,
+    Badge,
+} from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
+import { FiSave } from "react-icons/fi";
 
 interface Profile {
     id: string;
@@ -18,14 +32,18 @@ export default function ProfilPage() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [message, setMessage] = useState("");
-    const [error, setError] = useState("");
 
-    // Form states
     const [nama, setNama] = useState("");
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+
+    const showToast = (title: string, type: "success" | "error" | "warning") => {
+        toaster.create({
+            title,
+            type,
+        });
+    };
 
     const fetchProfile = async () => {
         try {
@@ -33,8 +51,8 @@ export default function ProfilPage() {
             const data = await res.json();
             setProfile(data);
             setNama(data.nama);
-        } catch (err) {
-            console.error("Error fetching profile:", err);
+        } catch (error) {
+            console.error("Error fetching profile:", error);
         } finally {
             setLoading(false);
         }
@@ -44,12 +62,8 @@ export default function ProfilPage() {
         fetchProfile();
     }, []);
 
-    const handleUpdateNama = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setMessage("");
+    const handleUpdateNama = async () => {
         setSaving(true);
-
         try {
             const res = await fetch("/api/profile", {
                 method: "PATCH",
@@ -58,37 +72,31 @@ export default function ProfilPage() {
             });
 
             if (res.ok) {
-                setMessage("Nama berhasil diubah");
-                await update({ name: nama }); // Update session
+                showToast("Nama berhasil diubah", "success");
+                await update({ name: nama });
                 fetchProfile();
             } else {
                 const data = await res.json();
-                setError(data.error || "Gagal mengubah nama");
+                showToast(data.error || "Gagal mengubah nama", "error");
             }
-        } catch (err) {
-            setError("Terjadi kesalahan");
+        } catch (error) {
+            showToast("Terjadi kesalahan", "error");
         } finally {
             setSaving(false);
         }
     };
 
-    const handleUpdatePassword = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setMessage("");
-
+    const handleUpdatePassword = async () => {
         if (newPassword !== confirmPassword) {
-            setError("Password baru tidak cocok");
+            showToast("Password baru tidak cocok", "warning");
             return;
         }
-
         if (newPassword.length < 6) {
-            setError("Password minimal 6 karakter");
+            showToast("Password minimal 6 karakter", "warning");
             return;
         }
 
         setSaving(true);
-
         try {
             const res = await fetch("/api/profile", {
                 method: "PATCH",
@@ -97,112 +105,130 @@ export default function ProfilPage() {
             });
 
             if (res.ok) {
-                setMessage("Password berhasil diubah");
+                showToast("Password berhasil diubah", "success");
                 setCurrentPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
             } else {
                 const data = await res.json();
-                setError(data.error || "Gagal mengubah password");
+                showToast(data.error || "Gagal mengubah password", "error");
             }
-        } catch (err) {
-            setError("Terjadi kesalahan");
+        } catch (error) {
+            showToast("Terjadi kesalahan", "error");
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) return <div className={styles.loading}>Memuat...</div>;
+    if (loading) return null;
 
     return (
-        <div className={styles.container}>
-            <h1 className={styles.title}>Profil Saya</h1>
-            <p className={styles.subtitle}>Kelola informasi akun Anda</p>
+        <Box maxW="600px" mx="auto">
+            <VStack align="start" gap={1} mb={8}>
+                <Heading size="lg">Profil Saya</Heading>
+                <Text color="gray.500">Kelola informasi akun Anda</Text>
+            </VStack>
 
-            {message && <div className={styles.success}>{message}</div>}
-            {error && <div className={styles.error}>{error}</div>}
+            <Card.Root mb={6}>
+                <Card.Header>
+                    <HStack gap={4}>
+                        <Avatar.Root size="lg" bg="blue.500">
+                            <Avatar.Fallback>{(profile?.nama || "U").substring(0, 2).toUpperCase()}</Avatar.Fallback>
+                        </Avatar.Root>
+                        <VStack align="start" gap={1}>
+                            <Text fontWeight="bold" fontSize="lg">{profile?.nama}</Text>
+                            <Text color="gray.500" fontSize="sm">{profile?.email}</Text>
+                            <HStack>
+                                <Badge colorPalette="blue">{profile?.role}</Badge>
+                                {profile?.unitKerja && (
+                                    <Badge colorPalette="green">{profile.unitKerja.nama}</Badge>
+                                )}
+                            </HStack>
+                        </VStack>
+                    </HStack>
+                </Card.Header>
+                <Card.Body pt={0}>
+                    <Text fontSize="sm" color="gray.500">
+                        Bergabung sejak{" "}
+                        {new Date(profile?.createdAt || "").toLocaleDateString("id-ID", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                        })}
+                    </Text>
+                </Card.Body>
+            </Card.Root>
 
-            <div className={styles.card}>
-                <h3>Informasi Akun</h3>
-                <div className={styles.info}>
-                    <div className={styles.infoRow}>
-                        <span className={styles.label}>Email</span>
-                        <span className={styles.value}>{profile?.email}</span>
-                    </div>
-                    <div className={styles.infoRow}>
-                        <span className={styles.label}>Role</span>
-                        <span className={styles.value}>{profile?.role}</span>
-                    </div>
-                    {profile?.unitKerja && (
-                        <div className={styles.infoRow}>
-                            <span className={styles.label}>Unit Kerja</span>
-                            <span className={styles.value}>
-                                {profile.unitKerja.nama} ({profile.unitKerja.kode})
-                            </span>
-                        </div>
-                    )}
-                    <div className={styles.infoRow}>
-                        <span className={styles.label}>Bergabung</span>
-                        <span className={styles.value}>
-                            {new Date(profile?.createdAt || "").toLocaleDateString("id-ID", {
-                                day: "numeric",
-                                month: "long",
-                                year: "numeric",
-                            })}
-                        </span>
-                    </div>
-                </div>
-            </div>
+            <Card.Root mb={6}>
+                <Card.Header>
+                    <Text fontWeight="semibold">Ubah Nama</Text>
+                </Card.Header>
+                <Card.Body pt={0}>
+                    <HStack>
+                        <Field.Root>
+                            <Input
+                                value={nama}
+                                onChange={(e) => setNama(e.target.value)}
+                                placeholder="Nama lengkap"
+                            />
+                        </Field.Root>
+                        <Button
+                            colorPalette="blue"
+                            onClick={handleUpdateNama}
+                            loading={saving}
+                        >
+                            <FiSave />
+                            Simpan
+                        </Button>
+                    </HStack>
+                </Card.Body>
+            </Card.Root>
 
-            <div className={styles.card}>
-                <h3>Ubah Nama</h3>
-                <form onSubmit={handleUpdateNama} className={styles.form}>
-                    <input
-                        type="text"
-                        value={nama}
-                        onChange={(e) => setNama(e.target.value)}
-                        className={styles.input}
-                        placeholder="Nama lengkap"
-                        required
-                    />
-                    <button type="submit" className={styles.btn} disabled={saving}>
-                        {saving ? "Menyimpan..." : "Simpan Nama"}
-                    </button>
-                </form>
-            </div>
-
-            <div className={styles.card}>
-                <h3>Ubah Password</h3>
-                <form onSubmit={handleUpdatePassword} className={styles.form}>
-                    <input
-                        type="password"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        className={styles.input}
-                        placeholder="Password saat ini"
-                        required
-                    />
-                    <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        className={styles.input}
-                        placeholder="Password baru"
-                        required
-                    />
-                    <input
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className={styles.input}
-                        placeholder="Konfirmasi password baru"
-                        required
-                    />
-                    <button type="submit" className={styles.btn} disabled={saving}>
-                        {saving ? "Menyimpan..." : "Ubah Password"}
-                    </button>
-                </form>
-            </div>
-        </div>
+            <Card.Root>
+                <Card.Header>
+                    <Text fontWeight="semibold">Ubah Password</Text>
+                </Card.Header>
+                <Card.Body pt={0}>
+                    <VStack gap={4}>
+                        <Field.Root>
+                            <Field.Label fontSize="sm">Password Saat Ini</Field.Label>
+                            <Input
+                                type="password"
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                placeholder="••••••••"
+                            />
+                        </Field.Root>
+                        <Field.Root>
+                            <Field.Label fontSize="sm">Password Baru</Field.Label>
+                            <Input
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                placeholder="••••••••"
+                            />
+                        </Field.Root>
+                        <Field.Root>
+                            <Field.Label fontSize="sm">Konfirmasi Password Baru</Field.Label>
+                            <Input
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                placeholder="••••••••"
+                            />
+                        </Field.Root>
+                        <Button
+                            colorPalette="blue"
+                            w="full"
+                            onClick={handleUpdatePassword}
+                            loading={saving}
+                            disabled={!currentPassword || !newPassword || !confirmPassword}
+                        >
+                            Ubah Password
+                        </Button>
+                    </VStack>
+                </Card.Body>
+            </Card.Root>
+        </Box>
     );
 }

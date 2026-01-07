@@ -1,16 +1,32 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import styles from "./tracking.module.css";
+import {
+    Box,
+    Heading,
+    Text,
+    VStack,
+    Card,
+    CardBody,
+    CardHeader,
+    Badge,
+    HStack,
+    Table,
+    Thead,
+    Tbody,
+    Tr,
+    Th,
+    Td,
+    Divider,
+    Icon,
+} from "@chakra-ui/react";
+import { FiClock, FiCheck, FiX } from "react-icons/fi";
 
 interface RequestItem {
     id: string;
     jumlahDiminta: number;
     jumlahDisetujui: number;
-    barang: {
-        nama: string;
-        satuan: string;
-    };
+    barang: { nama: string; satuan: string };
 }
 
 interface Request {
@@ -18,7 +34,6 @@ interface Request {
     status: string;
     catatan: string | null;
     createdAt: string;
-    updatedAt: string;
     items: RequestItem[];
 }
 
@@ -27,108 +42,118 @@ export default function UnitKerjaTrackingPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchRequests = async () => {
-            try {
-                const res = await fetch("/api/request");
-                const data = await res.json();
-                setRequests(data);
-            } catch (error) {
-                console.error("Error fetching requests:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchRequests();
+        fetch("/api/request")
+            .then((res) => res.json())
+            .then((data) => setRequests(data))
+            .finally(() => setLoading(false));
     }, []);
 
-    const getStatusBadge = (status: string) => {
+    const formatDate = (date: string) =>
+        new Date(date).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+
+    const getStatusIcon = (status: string) => {
         switch (status) {
             case "PENDING":
-                return { label: "Menunggu", class: styles.pending };
+                return FiClock;
             case "APPROVED":
-                return { label: "Disetujui", class: styles.approved };
+                return FiCheck;
             case "REJECTED":
-                return { label: "Ditolak", class: styles.rejected };
+                return FiX;
             default:
-                return { label: status, class: "" };
+                return FiClock;
         }
     };
 
-    if (loading) {
-        return <div className={styles.loading}>Memuat data...</div>;
-    }
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case "PENDING":
+                return "orange";
+            case "APPROVED":
+                return "green";
+            case "REJECTED":
+                return "red";
+            default:
+                return "gray";
+        }
+    };
 
     return (
-        <div className={styles.container}>
-            <h1 className={styles.title}>Tracking Permintaan</h1>
-            <p className={styles.subtitle}>Pantau status permintaan Anda</p>
+        <Box>
+            <VStack align="start" spacing={1} mb={8}>
+                <Heading size="lg">Tracking Permintaan</Heading>
+                <Text color="gray.500">Pantau status permintaan Anda</Text>
+            </VStack>
 
-            {requests.length === 0 ? (
-                <div className={styles.empty}>
-                    <p>Belum ada permintaan</p>
-                </div>
+            {requests.length === 0 && !loading ? (
+                <Card>
+                    <CardBody textAlign="center" py={10}>
+                        <Text color="gray.500">Belum ada permintaan</Text>
+                    </CardBody>
+                </Card>
             ) : (
-                <div className={styles.timeline}>
-                    {requests.map((request) => {
-                        const statusBadge = getStatusBadge(request.status);
-                        return (
-                            <div key={request.id} className={styles.card}>
-                                <div className={styles.cardHeader}>
-                                    <div className={styles.dateInfo}>
-                                        <span className={styles.date}>
-                                            {new Date(request.createdAt).toLocaleDateString("id-ID", {
-                                                day: "numeric",
-                                                month: "long",
-                                                year: "numeric",
-                                            })}
-                                        </span>
-                                        <span className={styles.time}>
-                                            {new Date(request.createdAt).toLocaleTimeString("id-ID", {
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                            })}
-                                        </span>
-                                    </div>
-                                    <span className={`${styles.badge} ${statusBadge.class}`}>
-                                        {statusBadge.label}
-                                    </span>
-                                </div>
-
-                                <div className={styles.items}>
-                                    {request.items.map((item) => (
-                                        <div key={item.id} className={styles.item}>
-                                            <span className={styles.itemName}>{item.barang.nama}</span>
-                                            <div className={styles.itemQty}>
-                                                <span>Diminta: {item.jumlahDiminta}</span>
-                                                {request.status === "APPROVED" && (
-                                                    <span className={styles.approvedQty}>
-                                                        Disetujui: {item.jumlahDisetujui}
-                                                    </span>
-                                                )}
-                                                <span className={styles.satuan}>
-                                                    {item.barang.satuan}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                <VStack spacing={4} align="stretch">
+                    {requests.map((request) => (
+                        <Card key={request.id}>
+                            <CardHeader pb={2}>
+                                <HStack justify="space-between">
+                                    <HStack>
+                                        <Icon
+                                            as={getStatusIcon(request.status)}
+                                            color={`${getStatusColor(request.status)}.500`}
+                                        />
+                                        <Text fontWeight="semibold">Request #{request.id.slice(-6)}</Text>
+                                    </HStack>
+                                    <HStack>
+                                        <Text fontSize="sm" color="gray.500">
+                                            {formatDate(request.createdAt)}
+                                        </Text>
+                                        <Badge colorScheme={getStatusColor(request.status)}>
+                                            {request.status}
+                                        </Badge>
+                                    </HStack>
+                                </HStack>
+                            </CardHeader>
+                            <CardBody pt={0}>
+                                <Table size="sm" variant="simple">
+                                    <Thead>
+                                        <Tr>
+                                            <Th>Barang</Th>
+                                            <Th isNumeric>Diminta</Th>
+                                            <Th isNumeric>Disetujui</Th>
+                                        </Tr>
+                                    </Thead>
+                                    <Tbody>
+                                        {request.items.map((item) => (
+                                            <Tr key={item.id}>
+                                                <Td>{item.barang.nama}</Td>
+                                                <Td isNumeric>{item.jumlahDiminta} {item.barang.satuan}</Td>
+                                                <Td isNumeric color={item.jumlahDisetujui > 0 ? "green.500" : "gray.400"}>
+                                                    {item.jumlahDisetujui > 0 ? `${item.jumlahDisetujui} ${item.barang.satuan}` : "-"}
+                                                </Td>
+                                            </Tr>
+                                        ))}
+                                    </Tbody>
+                                </Table>
 
                                 {request.catatan && (
-                                    <div className={styles.note}>📝 {request.catatan}</div>
+                                    <>
+                                        <Divider my={3} />
+                                        <Text fontSize="sm" color="gray.500">
+                                            Catatan: {request.catatan}
+                                        </Text>
+                                    </>
                                 )}
-
-                                {request.status !== "PENDING" && (
-                                    <div className={styles.footer}>
-                                        Diproses:{" "}
-                                        {new Date(request.updatedAt).toLocaleDateString("id-ID")}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
+                            </CardBody>
+                        </Card>
+                    ))}
+                </VStack>
             )}
-        </div>
+        </Box>
     );
 }

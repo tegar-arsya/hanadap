@@ -1,8 +1,24 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Html5QrcodeScanner } from "html5-qrcode";
-import styles from "./scan.module.css";
+import { useState, useEffect } from "react";
+import {
+    Box,
+    Heading,
+    Text,
+    VStack,
+    HStack,
+    Card,
+    Button,
+    Input,
+    Group,
+    NumberInput,
+    Field,
+    Alert,
+    Separator,
+    Progress,
+} from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
+import { FiCamera, FiSearch, FiPackage, FiPlus } from "react-icons/fi";
 
 interface Barang {
     id: string;
@@ -13,202 +29,137 @@ interface Barang {
 }
 
 export default function AdminScanPage() {
-    const [scanning, setScanning] = useState(false);
-    const [scannedBarcode, setScannedBarcode] = useState("");
+    const [barcode, setBarcode] = useState("");
     const [foundBarang, setFoundBarang] = useState<Barang | null>(null);
     const [notFound, setNotFound] = useState(false);
-    const [jumlah, setJumlah] = useState("");
+    const [jumlah, setJumlah] = useState("1");
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
-    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
-    const startScanner = () => {
-        setScanning(true);
-        setScannedBarcode("");
-        setFoundBarang(null);
-        setNotFound(false);
-        setMessage("");
-
-        setTimeout(() => {
-            const scanner = new Html5QrcodeScanner(
-                "qr-reader",
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                false
-            );
-
-            scanner.render(
-                (decodedText) => {
-                    setScannedBarcode(decodedText);
-                    scanner.clear();
-                    setScanning(false);
-                    lookupBarang(decodedText);
-                },
-                (error) => {
-                    console.log("Scan error:", error);
-                }
-            );
-
-            scannerRef.current = scanner;
-        }, 100);
+    const showToast = (title: string, type: "success") => {
+        toaster.create({ title, type });
     };
 
-    const stopScanner = () => {
-        if (scannerRef.current) {
-            scannerRef.current.clear();
-        }
-        setScanning(false);
-    };
-
-    const lookupBarang = async (barcode: string) => {
-        try {
-            const res = await fetch("/api/barang");
-            const barangList: Barang[] = await res.json();
-            const found = barangList.find((b) => b.barcode === barcode);
-
-            if (found) {
-                setFoundBarang(found);
-                setNotFound(false);
-            } else {
-                setFoundBarang(null);
-                setNotFound(true);
-            }
-        } catch (error) {
-            console.error("Error looking up barang:", error);
+    const lookupBarang = async () => {
+        if (!barcode) return;
+        const res = await fetch("/api/barang");
+        const list: Barang[] = await res.json();
+        const found = list.find((b) => b.barcode === barcode);
+        if (found) {
+            setFoundBarang(found);
+            setNotFound(false);
+        } else {
+            setFoundBarang(null);
+            setNotFound(true);
         }
     };
 
     const handleAddStock = async () => {
-        if (!foundBarang || !jumlah) return;
-
+        if (!foundBarang) return;
         setLoading(true);
-        try {
-            const res = await fetch("/api/stok", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    barangId: foundBarang.id,
-                    jumlah: parseInt(jumlah),
-                    tanggalMasuk: new Date().toISOString(),
-                }),
-            });
-
-            if (res.ok) {
-                setMessage(`Berhasil menambah ${jumlah} ${foundBarang.satuan} ${foundBarang.nama}`);
-                setJumlah("");
-                setFoundBarang(null);
-                setScannedBarcode("");
-            } else {
-                setMessage("Gagal menambah stok");
-            }
-        } catch (error) {
-            console.error("Error adding stock:", error);
-            setMessage("Terjadi kesalahan");
-        } finally {
-            setLoading(false);
-        }
+        await fetch("/api/stok", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                barangId: foundBarang.id,
+                jumlah: parseInt(jumlah),
+                tanggalMasuk: new Date().toISOString(),
+            }),
+        });
+        showToast(`Stok ${foundBarang.nama} +${jumlah}`, "success");
+        setFoundBarang(null);
+        setBarcode("");
+        setJumlah("1");
+        setLoading(false);
     };
 
-    useEffect(() => {
-        return () => {
-            if (scannerRef.current) {
-                scannerRef.current.clear();
-            }
-        };
-    }, []);
-
     return (
-        <div className={styles.container}>
-            <h1 className={styles.title}>Scan Barcode/QR</h1>
-            <p className={styles.subtitle}>Scan barcode untuk tambah stok cepat</p>
+        <Box maxW="600px">
+            <VStack align="start" gap={1} mb={8}>
+                <Heading size="lg">Scan Barcode</Heading>
+                <Text color="gray.500">Scan atau input barcode untuk tambah stok cepat</Text>
+            </VStack>
 
-            {message && (
-                <div className={styles.message}>{message}</div>
-            )}
-
-            {!scanning && !foundBarang && (
-                <button className={styles.scanBtn} onClick={startScanner}>
-                    📷 Mulai Scan
-                </button>
-            )}
-
-            {scanning && (
-                <div className={styles.scannerContainer}>
-                    <div id="qr-reader" className={styles.scanner}></div>
-                    <button className={styles.cancelBtn} onClick={stopScanner}>
-                        Batal
-                    </button>
-                </div>
-            )}
-
-            {scannedBarcode && !foundBarang && !notFound && (
-                <div className={styles.loading}>Mencari barang...</div>
-            )}
+            <Card.Root mb={6}>
+                <Card.Header pb={2}>
+                    <Text fontWeight="semibold">Input Barcode</Text>
+                </Card.Header>
+                <Card.Body pt={0}>
+                    <HStack>
+                        <Group flex={1}>
+                            <FiCamera />
+                            <Input
+                                placeholder="Scan atau ketik barcode..."
+                                value={barcode}
+                                onChange={(e) => setBarcode(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && lookupBarang()}
+                            />
+                        </Group>
+                        <Button colorPalette="blue" onClick={lookupBarang}>
+                            <FiSearch />
+                            Cari
+                        </Button>
+                    </HStack>
+                    <Text fontSize="sm" color="gray.500" mt={2}>
+                        Tekan Enter atau klik Cari setelah scan/input barcode
+                    </Text>
+                </Card.Body>
+            </Card.Root>
 
             {notFound && (
-                <div className={styles.notFound}>
-                    <p>Barcode tidak ditemukan: <code>{scannedBarcode}</code></p>
-                    <button className={styles.scanBtn} onClick={startScanner}>
-                        Scan Ulang
-                    </button>
-                </div>
+                <Alert.Root status="warning" borderRadius="lg" mb={6}>
+                    <Alert.Indicator />
+                    <Alert.Content>
+                        Barcode tidak ditemukan: <strong>{barcode}</strong>
+                    </Alert.Content>
+                </Alert.Root>
             )}
 
             {foundBarang && (
-                <div className={styles.resultCard}>
-                    <h3>Barang Ditemukan</h3>
-                    <div className={styles.barangInfo}>
-                        <span className={styles.barangName}>{foundBarang.nama}</span>
-                        <span className={styles.barangStock}>
-                            Stok saat ini: {foundBarang.stokTotal} {foundBarang.satuan}
-                        </span>
-                    </div>
+                <Card.Root>
+                    <Card.Header bg="green.50" borderTopRadius="lg">
+                        <HStack>
+                            <FiPackage color="green" />
+                            <Text fontWeight="semibold" color="green.700">Barang Ditemukan</Text>
+                        </HStack>
+                    </Card.Header>
+                    <Card.Body>
+                        <VStack align="stretch" gap={4}>
+                            <Box>
+                                <Text fontSize="xl" fontWeight="bold">{foundBarang.nama}</Text>
+                                <Text color="gray.500">Stok saat ini: {foundBarang.stokTotal} {foundBarang.satuan}</Text>
+                            </Box>
 
-                    <div className={styles.formGroup}>
-                        <label>Jumlah yang ditambahkan</label>
-                        <input
-                            type="number"
-                            min="1"
-                            value={jumlah}
-                            onChange={(e) => setJumlah(e.target.value)}
-                            className={styles.input}
-                            placeholder="Masukkan jumlah"
-                        />
-                    </div>
+                            <Separator />
 
-                    <div className={styles.actions}>
-                        <button
-                            className={styles.addBtn}
-                            onClick={handleAddStock}
-                            disabled={loading || !jumlah}
-                        >
-                            {loading ? "Menambahkan..." : "+ Tambah Stok"}
-                        </button>
-                        <button className={styles.rescanBtn} onClick={startScanner}>
-                            Scan Lagi
-                        </button>
-                    </div>
-                </div>
+                            <Field.Root>
+                                <Field.Label>Jumlah yang ditambahkan</Field.Label>
+                                <NumberInput.Root value={jumlah} onValueChange={(e) => setJumlah(e.value)} min={1}>
+                                    <NumberInput.Input />
+                                    <NumberInput.Control>
+                                        <NumberInput.IncrementTrigger />
+                                        <NumberInput.DecrementTrigger />
+                                    </NumberInput.Control>
+                                </NumberInput.Root>
+                            </Field.Root>
+
+                            <HStack>
+                                <Button
+                                    colorPalette="green"
+                                    flex={1}
+                                    onClick={handleAddStock}
+                                    loading={loading}
+                                >
+                                    <FiPlus />
+                                    Tambah Stok
+                                </Button>
+                                <Button variant="ghost" onClick={() => { setFoundBarang(null); setBarcode(""); }}>
+                                    Batal
+                                </Button>
+                            </HStack>
+                        </VStack>
+                    </Card.Body>
+                </Card.Root>
             )}
-
-            <div className={styles.manual}>
-                <h4>Input Manual Barcode</h4>
-                <div className={styles.manualForm}>
-                    <input
-                        type="text"
-                        placeholder="Ketik barcode..."
-                        value={scannedBarcode}
-                        onChange={(e) => setScannedBarcode(e.target.value)}
-                        className={styles.input}
-                    />
-                    <button
-                        className={styles.searchBtn}
-                        onClick={() => lookupBarang(scannedBarcode)}
-                        disabled={!scannedBarcode}
-                    >
-                        Cari
-                    </button>
-                </div>
-            </div>
-        </div>
+        </Box>
     );
 }

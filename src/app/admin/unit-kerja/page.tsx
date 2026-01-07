@@ -1,180 +1,157 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import styles from "./unit-kerja.module.css";
+import {
+    Box,
+    Heading,
+    Text,
+    VStack,
+    HStack,
+    Card,
+    Button,
+    Input,
+    Table,
+    Badge,
+    IconButton,
+    Dialog,
+    Field,
+    NumberInput,
+} from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 
 interface UnitKerja {
     id: string;
     nama: string;
     kode: string;
     quotaBulanan: number;
-    _count: { users: number };
+    _count?: { users: number };
 }
 
 export default function AdminUnitKerjaPage() {
-    const [unitKerjaList, setUnitKerjaList] = useState<UnitKerja[]>([]);
+    const [unitList, setUnitList] = useState<UnitKerja[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+
     const [nama, setNama] = useState("");
     const [kode, setKode] = useState("");
     const [quota, setQuota] = useState("100");
-    const [editId, setEditId] = useState<string | null>(null);
 
-    const fetchUnitKerja = async () => {
-        try {
-            const res = await fetch("/api/unit-kerja");
-            const data = await res.json();
-            setUnitKerjaList(data);
-        } catch (error) {
-            console.error("Error fetching unit kerja:", error);
-        } finally {
-            setLoading(false);
-        }
+    const showToast = (title: string, type: "success" | "info") => {
+        toaster.create({ title, type });
     };
 
-    useEffect(() => {
-        fetchUnitKerja();
-    }, []);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            const payload = {
-                nama,
-                kode,
-                quotaBulanan: parseInt(quota),
-            };
-
-            if (editId) {
-                await fetch(`/api/unit-kerja/${editId}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
-                });
-            } else {
-                await fetch("/api/unit-kerja", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload),
-                });
-            }
-            resetForm();
-            fetchUnitKerja();
-        } catch (error) {
-            console.error("Error saving unit kerja:", error);
-        }
+    const fetchData = async () => {
+        const res = await fetch("/api/unit-kerja");
+        setUnitList(await res.json());
+        setLoading(false);
     };
 
-    const resetForm = () => {
-        setNama("");
-        setKode("");
-        setQuota("100");
-        setEditId(null);
-        setShowForm(false);
-    };
+    useEffect(() => { fetchData(); }, []);
 
-    const handleEdit = (unit: UnitKerja) => {
-        setNama(unit.nama);
-        setKode(unit.kode);
-        setQuota(unit.quotaBulanan.toString());
-        setEditId(unit.id);
-        setShowForm(true);
+    const handleAdd = async () => {
+        if (!nama || !kode) return;
+        await fetch("/api/unit-kerja", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nama, kode, quotaBulanan: parseInt(quota) }),
+        });
+        showToast("Unit Kerja ditambahkan", "success");
+        setNama(""); setKode(""); setQuota("100");
+        setIsOpen(false);
+        fetchData();
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Yakin ingin menghapus unit kerja ini?")) return;
-        try {
-            await fetch(`/api/unit-kerja/${id}`, { method: "DELETE" });
-            fetchUnitKerja();
-        } catch (error) {
-            console.error("Error deleting unit kerja:", error);
-        }
+        if (!confirm("Yakin ingin menghapus?")) return;
+        await fetch(`/api/unit-kerja/${id}`, { method: "DELETE" });
+        showToast("Unit Kerja dihapus", "info");
+        fetchData();
     };
 
-    if (loading) return <div className={styles.loading}>Memuat...</div>;
-
     return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <div>
-                    <h1 className={styles.title}>Unit Kerja</h1>
-                    <p className={styles.subtitle}>Kelola departemen dan quota request bulanan</p>
-                </div>
-                <button
-                    className={styles.addButton}
-                    onClick={() => {
-                        setShowForm(!showForm);
-                        if (showForm) resetForm();
-                    }}
-                >
-                    {showForm ? "Batal" : "+ Tambah Unit"}
-                </button>
-            </div>
+        <Box>
+            <HStack justify="space-between" mb={8}>
+                <VStack align="start" gap={1}>
+                    <Heading size="lg">Unit Kerja</Heading>
+                    <Text color="gray.500">Kelola departemen dan quota</Text>
+                </VStack>
+                <Button colorPalette="blue" onClick={() => setIsOpen(true)}>
+                    <FiPlus />
+                    Tambah Unit
+                </Button>
+            </HStack>
 
-            {showForm && (
-                <form onSubmit={handleSubmit} className={styles.form}>
-                    <input
-                        type="text"
-                        placeholder="Nama Unit (IT Department)"
-                        value={nama}
-                        onChange={(e) => setNama(e.target.value)}
-                        className={styles.input}
-                        required
-                    />
-                    <input
-                        type="text"
-                        placeholder="Kode (IT)"
-                        value={kode}
-                        onChange={(e) => setKode(e.target.value.toUpperCase())}
-                        className={styles.inputSmall}
-                        maxLength={10}
-                        required
-                    />
-                    <input
-                        type="number"
-                        placeholder="Quota"
-                        value={quota}
-                        onChange={(e) => setQuota(e.target.value)}
-                        className={styles.inputSmall}
-                        min="1"
-                        required
-                    />
-                    <button type="submit" className={styles.submitButton}>
-                        {editId ? "Update" : "Simpan"}
-                    </button>
-                </form>
-            )}
+            <Card.Root>
+                <Card.Body p={0}>
+                    <Table.Root>
+                        <Table.Header>
+                            <Table.Row bg="gray.50">
+                                <Table.ColumnHeader>Nama Unit</Table.ColumnHeader>
+                                <Table.ColumnHeader>Kode</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="right">Quota/Bulan</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="right">Anggota</Table.ColumnHeader>
+                                <Table.ColumnHeader w="100px">Aksi</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {unitList.map((unit) => (
+                                <Table.Row key={unit.id}>
+                                    <Table.Cell fontWeight="medium">{unit.nama}</Table.Cell>
+                                    <Table.Cell><Badge colorPalette="blue">{unit.kode}</Badge></Table.Cell>
+                                    <Table.Cell textAlign="right">{unit.quotaBulanan}</Table.Cell>
+                                    <Table.Cell textAlign="right">{unit._count?.users || 0}</Table.Cell>
+                                    <Table.Cell>
+                                        <IconButton
+                                            aria-label="Delete"
+                                            size="sm"
+                                            colorPalette="red"
+                                            variant="ghost"
+                                            onClick={() => handleDelete(unit.id)}
+                                        >
+                                            <FiTrash2 />
+                                        </IconButton>
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
+                        </Table.Body>
+                    </Table.Root>
+                </Card.Body>
+            </Card.Root>
 
-            <div className={styles.table}>
-                <div className={styles.tableHeader}>
-                    <span>Unit Kerja</span>
-                    <span>Kode</span>
-                    <span>Quota/Bulan</span>
-                    <span>Anggota</span>
-                    <span>Aksi</span>
-                </div>
-
-                {unitKerjaList.length === 0 ? (
-                    <div className={styles.empty}>Belum ada unit kerja</div>
-                ) : (
-                    unitKerjaList.map((unit) => (
-                        <div key={unit.id} className={styles.tableRow}>
-                            <span className={styles.nama}>{unit.nama}</span>
-                            <span className={styles.kode}>{unit.kode}</span>
-                            <span>{unit.quotaBulanan} item</span>
-                            <span>{unit._count.users} user</span>
-                            <span className={styles.actions}>
-                                <button className={styles.editBtn} onClick={() => handleEdit(unit)}>
-                                    Edit
-                                </button>
-                                <button className={styles.deleteBtn} onClick={() => handleDelete(unit.id)}>
-                                    Hapus
-                                </button>
-                            </span>
-                        </div>
-                    ))
-                )}
-            </div>
-        </div>
+            <Dialog.Root open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>
+                            <Dialog.Title>Tambah Unit Kerja</Dialog.Title>
+                            <Dialog.CloseTrigger />
+                        </Dialog.Header>
+                        <Dialog.Body>
+                            <VStack gap={4}>
+                                <Field.Root required>
+                                    <Field.Label>Nama</Field.Label>
+                                    <Input value={nama} onChange={(e) => setNama(e.target.value)} placeholder="IT Department" />
+                                </Field.Root>
+                                <Field.Root required>
+                                    <Field.Label>Kode</Field.Label>
+                                    <Input value={kode} onChange={(e) => setKode(e.target.value)} placeholder="IT" />
+                                </Field.Root>
+                                <Field.Root>
+                                    <Field.Label>Quota Bulanan</Field.Label>
+                                    <NumberInput.Root value={quota} onValueChange={(e) => setQuota(e.value)} min={1}>
+                                        <NumberInput.Input />
+                                    </NumberInput.Root>
+                                </Field.Root>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button variant="ghost" mr={3} onClick={() => setIsOpen(false)}>Batal</Button>
+                            <Button colorPalette="blue" onClick={handleAdd}>Simpan</Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+            </Dialog.Root>
+        </Box>
     );
 }

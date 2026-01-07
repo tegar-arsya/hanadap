@@ -1,8 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import styles from "./request.module.css";
+import {
+    Box,
+    Heading,
+    Text,
+    VStack,
+    HStack,
+    Card,
+    Button,
+    NativeSelect,
+    NumberInput,
+    Textarea,
+    Table,
+    IconButton,
+    Badge,
+    Separator,
+    Field,
+    Alert,
+} from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
+import { FiPlus, FiTrash2, FiSend } from "react-icons/fi";
 
 interface Barang {
     id: string;
@@ -13,178 +31,199 @@ interface Barang {
 
 interface RequestItem {
     barangId: string;
-    jumlahDiminta: number;
+    barang: Barang;
+    jumlah: number;
 }
 
 export default function UnitKerjaRequestPage() {
-    const router = useRouter();
     const [barangList, setBarangList] = useState<Barang[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
     const [items, setItems] = useState<RequestItem[]>([]);
+    const [selectedBarang, setSelectedBarang] = useState("");
+    const [jumlah, setJumlah] = useState("1");
     const [catatan, setCatatan] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const showToast = (title: string, type: "success" | "error" | "warning") => {
+        toaster.create({ title, type });
+    };
 
     useEffect(() => {
-        const fetchBarang = async () => {
-            try {
-                const res = await fetch("/api/barang");
-                const data = await res.json();
-                setBarangList(data);
-            } catch (error) {
-                console.error("Error fetching barang:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchBarang();
+        fetch("/api/barang")
+            .then((res) => res.json())
+            .then((data) => setBarangList(data.filter((b: Barang) => b.stokTotal > 0)));
     }, []);
 
     const handleAddItem = () => {
-        if (barangList.length > 0) {
-            setItems([...items, { barangId: barangList[0].id, jumlahDiminta: 1 }]);
-        }
-    };
+        const barang = barangList.find((b) => b.id === selectedBarang);
+        if (!barang) return;
 
-    const handleRemoveItem = (index: number) => {
-        setItems(items.filter((_, i) => i !== index));
-    };
-
-    const handleItemChange = (
-        index: number,
-        field: keyof RequestItem,
-        value: string | number
-    ) => {
-        const newItems = [...items];
-        if (field === "barangId") {
-            newItems[index].barangId = value as string;
-        } else {
-            newItems[index].jumlahDiminta = parseInt(value as string) || 1;
-        }
-        setItems(newItems);
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (items.length === 0) {
-            alert("Tambahkan minimal 1 item");
+        if (items.some((i) => i.barangId === selectedBarang)) {
+            showToast("Barang sudah ditambahkan", "warning");
             return;
         }
 
-        setSubmitting(true);
+        setItems([...items, { barangId: selectedBarang, barang, jumlah: parseInt(jumlah) }]);
+        setSelectedBarang("");
+        setJumlah("1");
+    };
+
+    const handleRemoveItem = (barangId: string) => {
+        setItems(items.filter((i) => i.barangId !== barangId));
+    };
+
+    const handleSubmit = async () => {
+        if (items.length === 0) {
+            showToast("Tambahkan minimal 1 barang", "warning");
+            return;
+        }
+
+        setLoading(true);
         try {
             const res = await fetch("/api/request", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ items, catatan }),
+                body: JSON.stringify({
+                    catatan,
+                    items: items.map((i) => ({ barangId: i.barangId, jumlah: i.jumlah })),
+                }),
             });
 
             if (res.ok) {
-                router.push("/unit-kerja/tracking");
+                showToast("Permintaan berhasil diajukan", "success");
+                setItems([]);
+                setCatatan("");
             } else {
-                const error = await res.json();
-                alert(error.error || "Gagal membuat request");
+                showToast("Gagal mengajukan permintaan", "error");
             }
         } catch (error) {
-            console.error("Error creating request:", error);
+            showToast("Terjadi kesalahan", "error");
         } finally {
-            setSubmitting(false);
+            setLoading(false);
         }
     };
 
-    if (loading) {
-        return <div className={styles.loading}>Memuat data...</div>;
-    }
-
     return (
-        <div className={styles.container}>
-            <h1 className={styles.title}>Ajukan Permintaan</h1>
-            <p className={styles.subtitle}>Buat permintaan barang baru</p>
+        <Box>
+            <VStack align="start" gap={1} mb={8}>
+                <Heading size="lg">Ajukan Permintaan</Heading>
+                <Text color="gray.500">Request barang dari gudang</Text>
+            </VStack>
 
-            <form onSubmit={handleSubmit} className={styles.form}>
-                <div className={styles.itemsSection}>
-                    <div className={styles.itemsHeader}>
-                        <h3>Daftar Barang</h3>
-                        <button
-                            type="button"
-                            className={styles.addItemBtn}
+            <Card.Root mb={6}>
+                <Card.Header>
+                    <Text fontWeight="semibold">Tambah Barang</Text>
+                </Card.Header>
+                <Card.Body pt={0}>
+                    <HStack gap={4} align="end">
+                        <Field.Root flex={2}>
+                            <Field.Label fontSize="sm">Barang</Field.Label>
+                            <NativeSelect.Root>
+                                <NativeSelect.Field
+                                    value={selectedBarang}
+                                    onChange={(e) => setSelectedBarang(e.target.value)}
+                                >
+                                    <option value="">Pilih barang</option>
+                                    {barangList.map((barang) => (
+                                        <option key={barang.id} value={barang.id}>
+                                            {barang.nama} (stok: {barang.stokTotal})
+                                        </option>
+                                    ))}
+                                </NativeSelect.Field>
+                            </NativeSelect.Root>
+                        </Field.Root>
+                        <Field.Root flex={1}>
+                            <Field.Label fontSize="sm">Jumlah</Field.Label>
+                            <NumberInput.Root min={1} value={jumlah} onValueChange={(e) => setJumlah(e.value)}>
+                                <NumberInput.Input />
+                                <NumberInput.Control>
+                                    <NumberInput.IncrementTrigger />
+                                    <NumberInput.DecrementTrigger />
+                                </NumberInput.Control>
+                            </NumberInput.Root>
+                        </Field.Root>
+                        <Button
+                            colorPalette="blue"
                             onClick={handleAddItem}
+                            disabled={!selectedBarang}
                         >
-                            + Tambah Item
-                        </button>
-                    </div>
+                            <FiPlus />
+                            Tambah
+                        </Button>
+                    </HStack>
+                </Card.Body>
+            </Card.Root>
 
-                    {items.length === 0 ? (
-                        <div className={styles.emptyItems}>
-                            Klik &quot;Tambah Item&quot; untuk menambahkan barang
-                        </div>
-                    ) : (
-                        <div className={styles.itemsList}>
-                            {items.map((item, index) => {
-                                const selectedBarang = barangList.find(
-                                    (b) => b.id === item.barangId
-                                );
-                                return (
-                                    <div key={index} className={styles.itemRow}>
-                                        <select
-                                            value={item.barangId}
-                                            onChange={(e) =>
-                                                handleItemChange(index, "barangId", e.target.value)
-                                            }
-                                            className={styles.select}
-                                        >
-                                            {barangList.map((barang) => (
-                                                <option key={barang.id} value={barang.id}>
-                                                    {barang.nama} (Stok: {barang.stokTotal} {barang.satuan})
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            value={item.jumlahDiminta}
-                                            onChange={(e) =>
-                                                handleItemChange(index, "jumlahDiminta", e.target.value)
-                                            }
-                                            className={styles.qtyInput}
-                                        />
-                                        <span className={styles.satuan}>
-                                            {selectedBarang?.satuan}
-                                        </span>
-                                        <button
-                                            type="button"
-                                            className={styles.removeBtn}
-                                            onClick={() => handleRemoveItem(index)}
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
+            {items.length > 0 && (
+                <Card.Root mb={6}>
+                    <Card.Header>
+                        <HStack justify="space-between">
+                            <Text fontWeight="semibold">Daftar Permintaan</Text>
+                            <Badge colorPalette="blue">{items.length} item</Badge>
+                        </HStack>
+                    </Card.Header>
+                    <Card.Body pt={0}>
+                        <Table.Root size="sm">
+                            <Table.Header>
+                                <Table.Row>
+                                    <Table.ColumnHeader>Barang</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign="right">Jumlah</Table.ColumnHeader>
+                                    <Table.ColumnHeader w="50px"></Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
+                                {items.map((item) => (
+                                    <Table.Row key={item.barangId}>
+                                        <Table.Cell>{item.barang.nama}</Table.Cell>
+                                        <Table.Cell textAlign="right">{item.jumlah} {item.barang.satuan}</Table.Cell>
+                                        <Table.Cell>
+                                            <IconButton
+                                                aria-label="Remove"
+                                                size="sm"
+                                                colorPalette="red"
+                                                variant="ghost"
+                                                onClick={() => handleRemoveItem(item.barangId)}
+                                            >
+                                                <FiTrash2 />
+                                            </IconButton>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ))}
+                            </Table.Body>
+                        </Table.Root>
 
-                <div className={styles.noteSection}>
-                    <label className={styles.label}>Catatan (opsional)</label>
-                    <textarea
-                        value={catatan}
-                        onChange={(e) => setCatatan(e.target.value)}
-                        className={styles.textarea}
-                        placeholder="Tambahkan catatan jika diperlukan..."
-                        rows={3}
-                    />
-                </div>
+                        <Separator my={4} />
 
-                <button
-                    type="submit"
-                    className={styles.submitBtn}
-                    disabled={submitting || items.length === 0}
-                >
-                    {submitting ? "Mengirim..." : "Kirim Permintaan"}
-                </button>
-            </form>
-        </div>
+                        <Field.Root mb={4}>
+                            <Field.Label fontSize="sm">Catatan (opsional)</Field.Label>
+                            <Textarea
+                                value={catatan}
+                                onChange={(e) => setCatatan(e.target.value)}
+                                placeholder="Tambahkan catatan jika perlu..."
+                            />
+                        </Field.Root>
+
+                        <Button
+                            colorPalette="green"
+                            size="lg"
+                            w="full"
+                            onClick={handleSubmit}
+                            loading={loading}
+                        >
+                            <FiSend />
+                            Kirim Permintaan
+                        </Button>
+                    </Card.Body>
+                </Card.Root>
+            )}
+
+            {items.length === 0 && (
+                <Alert.Root status="info" borderRadius="lg">
+                    <Alert.Indicator />
+                    <Alert.Content>
+                        Pilih barang dan jumlah untuk memulai permintaan
+                    </Alert.Content>
+                </Alert.Root>
+            )}
+        </Box>
     );
 }

@@ -1,153 +1,137 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import styles from "./activity.module.css";
+import {
+    Box,
+    Heading,
+    Text,
+    VStack,
+    HStack,
+    Card,
+    Badge,
+    NativeSelect,
+    Button,
+    Flex,
+} from "@chakra-ui/react";
+import { FiActivity, FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 interface ActivityLog {
     id: string;
     action: string;
     entity: string;
-    entityId: string | null;
     description: string;
     createdAt: string;
-    user: { nama: string; email: string };
-}
-
-interface Pagination {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
+    user: { nama: string };
 }
 
 const ACTION_COLORS: Record<string, string> = {
-    LOGIN: "#3b82f6",
-    CREATE: "#22c55e",
-    UPDATE: "#f59e0b",
-    DELETE: "#ef4444",
-    APPROVE: "#10b981",
-    REJECT: "#dc2626",
-    RETURN: "#8b5cf6",
+    LOGIN: "blue",
+    CREATE: "green",
+    UPDATE: "orange",
+    DELETE: "red",
+    APPROVE: "teal",
+    REJECT: "pink",
+    RETURN: "purple",
 };
 
-const ENTITIES = ["", "User", "Barang", "Request", "StockBatch", "Kategori", "UnitKerja"];
+const ENTITIES = ["User", "Barang", "Request", "StockBatch", "Kategori", "UnitKerja"];
 
 export default function AdminActivityPage() {
     const [logs, setLogs] = useState<ActivityLog[]>([]);
-    const [pagination, setPagination] = useState<Pagination | null>(null);
     const [loading, setLoading] = useState(true);
     const [entityFilter, setEntityFilter] = useState("");
     const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const fetchLogs = async () => {
         setLoading(true);
-        try {
-            const params = new URLSearchParams();
-            params.set("page", page.toString());
-            if (entityFilter) params.set("entity", entityFilter);
-
-            const res = await fetch(`/api/activity-log?${params}`);
-            const data = await res.json();
-            setLogs(data.logs);
-            setPagination(data.pagination);
-        } catch (error) {
-            console.error("Error fetching logs:", error);
-        } finally {
-            setLoading(false);
-        }
+        const params = new URLSearchParams({ page: page.toString() });
+        if (entityFilter) params.set("entity", entityFilter);
+        const res = await fetch(`/api/activity-log?${params}`);
+        const data = await res.json();
+        setLogs(data.logs || []);
+        setTotalPages(data.pagination?.totalPages || 1);
+        setLoading(false);
     };
 
-    useEffect(() => {
-        fetchLogs();
-    }, [page, entityFilter]);
+    useEffect(() => { fetchLogs(); }, [page, entityFilter]);
 
-    const formatDate = (date: string) => {
-        return new Date(date).toLocaleString("id-ID", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
+    const formatDate = (date: string) =>
+        new Date(date).toLocaleString("id-ID", {
+            day: "numeric", month: "short", year: "numeric",
+            hour: "2-digit", minute: "2-digit",
         });
-    };
 
     return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <div>
-                    <h1 className={styles.title}>Activity Log</h1>
-                    <p className={styles.subtitle}>Riwayat aktivitas pengguna sistem</p>
-                </div>
-            </div>
+        <Box>
+            <VStack align="start" gap={1} mb={8}>
+                <Heading size="lg">Activity Log</Heading>
+                <Text color="gray.500">Riwayat aktivitas pengguna sistem</Text>
+            </VStack>
 
-            <div className={styles.filters}>
-                <select
-                    value={entityFilter}
-                    onChange={(e) => {
-                        setEntityFilter(e.target.value);
-                        setPage(1);
-                    }}
-                    className={styles.select}
-                >
-                    <option value="">Semua Entity</option>
-                    {ENTITIES.filter(Boolean).map((entity) => (
-                        <option key={entity} value={entity}>
-                            {entity}
-                        </option>
-                    ))}
-                </select>
-            </div>
+            <Card.Root mb={6}>
+                <Card.Body>
+                    <NativeSelect.Root maxW="250px">
+                        <NativeSelect.Field
+                            value={entityFilter}
+                            onChange={(e) => { setEntityFilter(e.target.value); setPage(1); }}
+                        >
+                            <option value="">Semua Entity</option>
+                            {ENTITIES.map((e) => <option key={e} value={e}>{e}</option>)}
+                        </NativeSelect.Field>
+                    </NativeSelect.Root>
+                </Card.Body>
+            </Card.Root>
 
-            {loading ? (
-                <div className={styles.loading}>Memuat...</div>
-            ) : logs.length === 0 ? (
-                <div className={styles.empty}>Belum ada aktivitas tercatat</div>
+            {logs.length === 0 && !loading ? (
+                <Card.Root><Card.Body textAlign="center" py={10}><Text color="gray.500">Belum ada aktivitas</Text></Card.Body></Card.Root>
             ) : (
-                <>
-                    <div className={styles.timeline}>
-                        {logs.map((log) => (
-                            <div key={log.id} className={styles.logItem}>
-                                <div
-                                    className={styles.actionBadge}
-                                    style={{ backgroundColor: ACTION_COLORS[log.action] || "#666" }}
-                                >
-                                    {log.action}
-                                </div>
-                                <div className={styles.logContent}>
-                                    <div className={styles.logDescription}>{log.description}</div>
-                                    <div className={styles.logMeta}>
-                                        <span className={styles.logUser}>{log.user.nama}</span>
-                                        <span className={styles.logEntity}>{log.entity}</span>
-                                        <span className={styles.logTime}>{formatDate(log.createdAt)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    {pagination && pagination.totalPages > 1 && (
-                        <div className={styles.pagination}>
-                            <button
-                                className={styles.pageBtn}
-                                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                disabled={page === 1}
-                            >
-                                ← Sebelumnya
-                            </button>
-                            <span className={styles.pageInfo}>
-                                Halaman {pagination.page} dari {pagination.totalPages}
-                            </span>
-                            <button
-                                className={styles.pageBtn}
-                                onClick={() => setPage((p) => Math.min(pagination.totalPages, p + 1))}
-                                disabled={page === pagination.totalPages}
-                            >
-                                Selanjutnya →
-                            </button>
-                        </div>
-                    )}
-                </>
+                <VStack gap={3} align="stretch">
+                    {logs.map((log) => (
+                        <Card.Root key={log.id}>
+                            <Card.Body py={3}>
+                                <HStack gap={4}>
+                                    <Badge colorPalette={ACTION_COLORS[log.action] || "gray"} fontSize="xs">
+                                        {log.action}
+                                    </Badge>
+                                    <VStack align="start" gap={0} flex={1}>
+                                        <Text fontSize="sm">{log.description}</Text>
+                                        <HStack fontSize="xs" color="gray.500">
+                                            <Text fontWeight="medium">{log.user.nama}</Text>
+                                            <Text>•</Text>
+                                            <Badge size="sm" variant="subtle">{log.entity}</Badge>
+                                            <Text>•</Text>
+                                            <Text>{formatDate(log.createdAt)}</Text>
+                                        </HStack>
+                                    </VStack>
+                                </HStack>
+                            </Card.Body>
+                        </Card.Root>
+                    ))}
+                </VStack>
             )}
-        </div>
+
+            {totalPages > 1 && (
+                <Flex justify="center" mt={6} gap={4} align="center">
+                    <Button
+                        size="sm"
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={page === 1}
+                    >
+                        <FiChevronLeft />
+                        Sebelumnya
+                    </Button>
+                    <Text fontSize="sm" color="gray.500">Halaman {page} dari {totalPages}</Text>
+                    <Button
+                        size="sm"
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={page === totalPages}
+                    >
+                        Selanjutnya
+                        <FiChevronRight />
+                    </Button>
+                </Flex>
+            )}
+        </Box>
     );
 }

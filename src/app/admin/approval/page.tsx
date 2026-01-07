@@ -1,7 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import styles from "./approval.module.css";
+import {
+    Box,
+    Heading,
+    Text,
+    VStack,
+    HStack,
+    Card,
+    Button,
+    NativeSelect,
+    Input,
+    Field,
+    NumberInput,
+    IconButton,
+    Dialog,
+} from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
+import { FiPlus, FiTrash2, FiArrowDown, FiCheck } from "react-icons/fi";
 
 interface ApprovalLevel {
     id: string;
@@ -18,164 +34,152 @@ const ROLES = [
 export default function AdminApprovalPage() {
     const [levels, setLevels] = useState<ApprovalLevel[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
-    const [levelNum, setLevelNum] = useState("");
+    const [isOpen, setIsOpen] = useState(false);
+
+    const [levelNum, setLevelNum] = useState("1");
     const [nama, setNama] = useState("");
     const [roleRequired, setRoleRequired] = useState("");
 
-    const fetchLevels = async () => {
-        try {
-            const res = await fetch("/api/approval-level");
-            const data = await res.json();
-            setLevels(data);
-        } catch (error) {
-            console.error("Error fetching levels:", error);
-        } finally {
-            setLoading(false);
-        }
+    const showToast = (title: string, type: "success" | "info") => {
+        toaster.create({ title, type });
     };
 
-    useEffect(() => {
+    const fetchLevels = async () => {
+        const res = await fetch("/api/approval-level");
+        setLevels(await res.json());
+        setLoading(false);
+    };
+
+    useEffect(() => { fetchLevels(); }, []);
+
+    const handleAdd = async () => {
+        if (!nama || !roleRequired) return;
+        await fetch("/api/approval-level", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ level: parseInt(levelNum), nama, roleRequired }),
+        });
+        showToast("Level ditambahkan", "success");
+        setLevelNum("1"); setNama(""); setRoleRequired("");
+        setIsOpen(false);
         fetchLevels();
-    }, []);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            const res = await fetch("/api/approval-level", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    level: parseInt(levelNum),
-                    nama,
-                    roleRequired,
-                }),
-            });
-
-            if (res.ok) {
-                setLevelNum("");
-                setNama("");
-                setRoleRequired("");
-                setShowForm(false);
-                fetchLevels();
-            }
-        } catch (error) {
-            console.error("Error creating level:", error);
-        }
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Yakin ingin menghapus level ini?")) return;
-        try {
-            await fetch(`/api/approval-level?id=${id}`, { method: "DELETE" });
-            fetchLevels();
-        } catch (error) {
-            console.error("Error deleting level:", error);
-        }
+        await fetch(`/api/approval-level?id=${id}`, { method: "DELETE" });
+        showToast("Level dihapus", "info");
+        fetchLevels();
     };
 
-    if (loading) return <div className={styles.loading}>Memuat...</div>;
-
     return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <div>
-                    <h1 className={styles.title}>Konfigurasi Approval</h1>
-                    <p className={styles.subtitle}>Atur level persetujuan permintaan barang</p>
-                </div>
-                <button
-                    className={styles.addButton}
-                    onClick={() => setShowForm(!showForm)}
-                >
-                    {showForm ? "Batal" : "+ Tambah Level"}
-                </button>
-            </div>
+        <Box>
+            <HStack justify="space-between" mb={8}>
+                <VStack align="start" gap={1}>
+                    <Heading size="lg">Konfigurasi Approval</Heading>
+                    <Text color="gray.500">Atur level persetujuan permintaan</Text>
+                </VStack>
+                <Button colorPalette="blue" onClick={() => setIsOpen(true)}>
+                    <FiPlus />
+                    Tambah Level
+                </Button>
+            </HStack>
 
-            {showForm && (
-                <form onSubmit={handleSubmit} className={styles.form}>
-                    <div className={styles.formRow}>
-                        <div className={styles.formGroup}>
-                            <label>Level</label>
-                            <input
-                                type="number"
-                                min="1"
-                                value={levelNum}
-                                onChange={(e) => setLevelNum(e.target.value)}
-                                className={styles.input}
-                                placeholder="1, 2, 3..."
-                                required
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Nama Level</label>
-                            <input
-                                type="text"
-                                value={nama}
-                                onChange={(e) => setNama(e.target.value)}
-                                className={styles.input}
-                                placeholder="Kepala Unit, Admin Gudang..."
-                                required
-                            />
-                        </div>
-                        <div className={styles.formGroup}>
-                            <label>Role yang Bisa Approve</label>
-                            <select
-                                value={roleRequired}
-                                onChange={(e) => setRoleRequired(e.target.value)}
-                                className={styles.select}
-                                required
-                            >
-                                <option value="">Pilih Role</option>
-                                {ROLES.map((role) => (
-                                    <option key={role.value} value={role.value}>
-                                        {role.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                    <button type="submit" className={styles.submitBtn}>
-                        Simpan
-                    </button>
-                </form>
-            )}
+            <Card.Root>
+                <Card.Body>
+                    <Text fontWeight="semibold" mb={4}>Alur Persetujuan</Text>
 
-            <div className={styles.flowSection}>
-                <h3>Alur Persetujuan Saat Ini</h3>
-                {levels.length === 0 ? (
-                    <div className={styles.empty}>
-                        <p>Belum ada konfigurasi approval.</p>
-                        <p className={styles.hint}>
-                            Tambah level approval untuk mengaktifkan multi-level approval.
-                            Jika kosong, approval langsung oleh Admin.
-                        </p>
-                    </div>
-                ) : (
-                    <div className={styles.flow}>
-                        <div className={styles.flowStart}>📝 Request Dibuat</div>
-                        {levels.map((level, index) => (
-                            <div key={level.id} className={styles.flowItem}>
-                                <div className={styles.flowArrow}>↓</div>
-                                <div className={styles.flowCard}>
-                                    <div className={styles.flowLevel}>Level {level.level}</div>
-                                    <div className={styles.flowName}>{level.nama}</div>
-                                    <div className={styles.flowRole}>
-                                        Role: {ROLES.find((r) => r.value === level.roleRequired)?.label || level.roleRequired}
-                                    </div>
-                                    <button
-                                        className={styles.deleteBtn}
-                                        onClick={() => handleDelete(level.id)}
-                                    >
-                                        Hapus
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                        <div className={styles.flowArrow}>↓</div>
-                        <div className={styles.flowEnd}>✅ Disetujui & Stok Dikurangi</div>
-                    </div>
-                )}
-            </div>
-        </div>
+                    {levels.length === 0 ? (
+                        <VStack py={10} gap={2}>
+                            <Text color="gray.500">Belum ada konfigurasi approval.</Text>
+                            <Text fontSize="sm" color="gray.400">Jika kosong, approval langsung oleh Admin.</Text>
+                        </VStack>
+                    ) : (
+                        <VStack gap={0} align="center">
+                            <Box bg="green.100" color="green.700" px={6} py={2} borderRadius="full" fontWeight="medium">
+                                📝 Request Dibuat
+                            </Box>
+
+                            {levels.sort((a, b) => a.level - b.level).map((level) => (
+                                <VStack key={level.id} gap={0}>
+                                    <Box my={2} color="gray.300">
+                                        <FiArrowDown size={24} />
+                                    </Box>
+                                    <Card.Root borderWidth={2} borderColor="blue.200" bg="blue.50">
+                                        <Card.Body py={3} px={4}>
+                                            <HStack justify="space-between">
+                                                <VStack align="start" gap={0}>
+                                                    <HStack>
+                                                        <Text fontSize="xs" color="blue.500" fontWeight="bold">LEVEL {level.level}</Text>
+                                                        <Text fontWeight="semibold">{level.nama}</Text>
+                                                    </HStack>
+                                                    <Text fontSize="sm" color="gray.500">
+                                                        Role: {ROLES.find((r) => r.value === level.roleRequired)?.label}
+                                                    </Text>
+                                                </VStack>
+                                                <IconButton
+                                                    aria-label="Delete"
+                                                    size="sm"
+                                                    colorPalette="red"
+                                                    variant="ghost"
+                                                    onClick={() => handleDelete(level.id)}
+                                                >
+                                                    <FiTrash2 />
+                                                </IconButton>
+                                            </HStack>
+                                        </Card.Body>
+                                    </Card.Root>
+                                </VStack>
+                            ))}
+
+                            <Box my={2} color="gray.300">
+                                <FiArrowDown size={24} />
+                            </Box>
+                            <Box bg="green.100" color="green.700" px={6} py={2} borderRadius="full" fontWeight="medium">
+                                <HStack><FiCheck /><Text>Disetujui & Stok Dikurangi</Text></HStack>
+                            </Box>
+                        </VStack>
+                    )}
+                </Card.Body>
+            </Card.Root>
+
+            <Dialog.Root open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>
+                            <Dialog.Title>Tambah Level Approval</Dialog.Title>
+                            <Dialog.CloseTrigger />
+                        </Dialog.Header>
+                        <Dialog.Body>
+                            <VStack gap={4}>
+                                <Field.Root required>
+                                    <Field.Label>Level</Field.Label>
+                                    <NumberInput.Root value={levelNum} onValueChange={(e) => setLevelNum(e.value)} min={1}>
+                                        <NumberInput.Input />
+                                    </NumberInput.Root>
+                                </Field.Root>
+                                <Field.Root required>
+                                    <Field.Label>Nama Level</Field.Label>
+                                    <Input value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Kepala Unit, Admin Gudang..." />
+                                </Field.Root>
+                                <Field.Root required>
+                                    <Field.Label>Role yang Bisa Approve</Field.Label>
+                                    <NativeSelect.Root>
+                                        <NativeSelect.Field value={roleRequired} onChange={(e) => setRoleRequired(e.target.value)}>
+                                            <option value="">Pilih Role</option>
+                                            {ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                                        </NativeSelect.Field>
+                                    </NativeSelect.Root>
+                                </Field.Root>
+                            </VStack>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button variant="ghost" mr={3} onClick={() => setIsOpen(false)}>Batal</Button>
+                            <Button colorPalette="blue" onClick={handleAdd}>Simpan</Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+            </Dialog.Root>
+        </Box>
     );
 }

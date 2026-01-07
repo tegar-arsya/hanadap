@@ -2,116 +2,173 @@
 
 import { useState } from "react";
 import * as XLSX from "xlsx";
-import styles from "./laporan.module.css";
+import { pdfExports } from "@/lib/pdf-export";
+import {
+    Box,
+    Heading,
+    Text,
+    VStack,
+    HStack,
+    SimpleGrid,
+    Card,
+    Button,
+} from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
+import { FiDownload, FiFileText, FiPackage, FiList, FiAlertTriangle, FiLayers } from "react-icons/fi";
 
 type ReportType = "stok" | "transaksi" | "fifo" | "expiry";
 
-interface ReportData {
-    type: string;
-    data: Record<string, unknown>[];
-    generatedAt: string;
-}
+const reports = [
+    { id: "stok" as const, label: "Laporan Stok", icon: FiPackage, desc: "Daftar semua barang dan stok", color: "blue" },
+    { id: "transaksi" as const, label: "Riwayat Transaksi", icon: FiList, desc: "Log masuk/keluar barang", color: "purple" },
+    { id: "fifo" as const, label: "Batch FIFO", icon: FiLayers, desc: "Detail batch per barang", color: "teal" },
+    { id: "expiry" as const, label: "Barang Kadaluarsa", icon: FiAlertTriangle, desc: "Barang mendekati expired", color: "orange" },
+];
 
 export default function AdminLaporanPage() {
     const [loading, setLoading] = useState(false);
     const [selectedReport, setSelectedReport] = useState<ReportType>("stok");
 
-    const reports = [
-        { id: "stok" as const, label: "Laporan Stok", icon: "📦", desc: "Daftar semua barang dan stok" },
-        { id: "transaksi" as const, label: "Riwayat Transaksi", icon: "📋", desc: "Log masuk/keluar barang" },
-        { id: "fifo" as const, label: "Batch FIFO", icon: "🔢", desc: "Detail batch per barang" },
-        { id: "expiry" as const, label: "Barang Kadaluarsa", icon: "⚠️", desc: "Barang mendekati expired" },
-    ];
+    const showToast = (title: string, type: "success" | "warning" | "error") => {
+        toaster.create({ title, type });
+    };
+
+    const fetchReportData = async () => {
+        const res = await fetch(`/api/laporan?type=${selectedReport}`);
+        const result = await res.json();
+        if (!result.data || result.data.length === 0) {
+            showToast("Tidak ada data untuk diexport", "warning");
+            return null;
+        }
+        return result;
+    };
+
+    const transformData = (result: { data: Record<string, unknown>[] }) => {
+        if (selectedReport === "stok") {
+            return result.data.map((item) => ({
+                nama: item.nama,
+                kategori: (item.kategori as Record<string, unknown>)?.nama || "-",
+                satuan: item.satuan,
+                stokTotal: item.stokTotal,
+                stokMinimum: item.stokMinimum,
+            }));
+        } else if (selectedReport === "transaksi") {
+            return result.data.map((item) => ({
+                tanggal: new Date(item.createdAt as string).toLocaleDateString("id-ID"),
+                barang: (item.barang as Record<string, unknown>)?.nama,
+                tipe: item.tipe,
+                jumlah: item.jumlah,
+                user: (item.user as Record<string, unknown>)?.nama,
+            }));
+        } else if (selectedReport === "fifo") {
+            return result.data.map((item) => ({
+                barang: (item.barang as Record<string, unknown>)?.nama,
+                tanggalMasuk: new Date(item.tanggalMasuk as string).toLocaleDateString("id-ID"),
+                jumlah: item.jumlah,
+                sisaJumlah: item.sisaJumlah,
+                tanggalExpiry: item.tanggalExpiry
+                    ? new Date(item.tanggalExpiry as string).toLocaleDateString("id-ID")
+                    : "-",
+            }));
+        } else {
+            return result.data.map((item) => ({
+                barang: (item.barang as Record<string, unknown>)?.nama,
+                tanggalExpiry: new Date(item.tanggalExpiry as string).toLocaleDateString("id-ID"),
+                sisaJumlah: item.sisaJumlah,
+            }));
+        }
+    };
 
     const downloadExcel = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/laporan?type=${selectedReport}`);
-            const result: ReportData = await res.json();
-
-            if (!result.data || result.data.length === 0) {
-                alert("Tidak ada data untuk diexport");
-                return;
-            }
-
-            // Transform data for Excel
-            let excelData: Record<string, unknown>[] = [];
-
-            if (selectedReport === "stok") {
-                excelData = result.data.map((item: Record<string, unknown>) => ({
-                    "Nama Barang": item.nama,
-                    "Kategori": (item.kategori as Record<string, unknown>)?.nama || "-",
-                    "Satuan": item.satuan,
-                    "Stok Total": item.stokTotal,
-                    "Stok Minimum": item.stokMinimum,
-                }));
-            } else if (selectedReport === "transaksi") {
-                excelData = result.data.map((item: Record<string, unknown>) => ({
-                    "Tanggal": new Date(item.createdAt as string).toLocaleDateString("id-ID"),
-                    "Barang": (item.barang as Record<string, unknown>)?.nama,
-                    "Tipe": item.tipe,
-                    "Jumlah": item.jumlah,
-                    "User": (item.user as Record<string, unknown>)?.nama,
-                    "Keterangan": item.keterangan || "-",
-                }));
-            } else if (selectedReport === "fifo") {
-                excelData = result.data.map((item: Record<string, unknown>) => ({
-                    "Barang": (item.barang as Record<string, unknown>)?.nama,
-                    "Tanggal Masuk": new Date(item.tanggalMasuk as string).toLocaleDateString("id-ID"),
-                    "Jumlah Awal": item.jumlah,
-                    "Sisa": item.sisaJumlah,
-                    "Tanggal Expiry": item.tanggalExpiry
-                        ? new Date(item.tanggalExpiry as string).toLocaleDateString("id-ID")
-                        : "-",
-                }));
-            } else if (selectedReport === "expiry") {
-                excelData = result.data.map((item: Record<string, unknown>) => ({
-                    "Barang": (item.barang as Record<string, unknown>)?.nama,
-                    "Tanggal Expiry": new Date(item.tanggalExpiry as string).toLocaleDateString("id-ID"),
-                    "Sisa Stok": item.sisaJumlah,
-                }));
-            }
-
-            // Create workbook and download
-            const ws = XLSX.utils.json_to_sheet(excelData);
+            const result = await fetchReportData();
+            if (!result) return;
+            const data = transformData(result);
+            const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Laporan");
             XLSX.writeFile(wb, `laporan_${selectedReport}_${new Date().toISOString().split("T")[0]}.xlsx`);
-        } catch (error) {
-            console.error("Error downloading report:", error);
-            alert("Gagal mengunduh laporan");
+            showToast("Excel berhasil diunduh", "success");
+        } catch {
+            showToast("Gagal mengunduh", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const downloadPDF = async () => {
+        setLoading(true);
+        try {
+            const result = await fetchReportData();
+            if (!result) return;
+            const data = transformData(result);
+            pdfExports[selectedReport](data);
+            showToast("PDF berhasil diunduh", "success");
+        } catch {
+            showToast("Gagal mengunduh", "error");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className={styles.container}>
-            <h1 className={styles.title}>Laporan</h1>
-            <p className={styles.subtitle}>Generate dan export laporan ke Excel</p>
+        <Box>
+            <VStack align="start" gap={1} mb={8}>
+                <Heading size="lg">Laporan</Heading>
+                <Text color="gray.500">Generate dan export laporan ke Excel atau PDF</Text>
+            </VStack>
 
-            <div className={styles.reportGrid}>
-                {reports.map((report) => (
-                    <div
-                        key={report.id}
-                        className={`${styles.reportCard} ${selectedReport === report.id ? styles.selected : ""
-                            }`}
-                        onClick={() => setSelectedReport(report.id)}
-                    >
-                        <span className={styles.reportIcon}>{report.icon}</span>
-                        <h3>{report.label}</h3>
-                        <p>{report.desc}</p>
-                    </div>
-                ))}
-            </div>
+            <SimpleGrid columns={{ base: 1, md: 2 }} gap={4} mb={8}>
+                {reports.map((report) => {
+                    const IconComponent = report.icon;
+                    return (
+                        <Card.Root
+                            key={report.id}
+                            cursor="pointer"
+                            onClick={() => setSelectedReport(report.id)}
+                            borderWidth={2}
+                            borderColor={selectedReport === report.id ? `${report.color}.500` : "transparent"}
+                            bg={selectedReport === report.id ? `${report.color}.50` : "white"}
+                            transition="all 0.2s"
+                            _hover={{ borderColor: `${report.color}.200` }}
+                        >
+                            <Card.Body>
+                                <HStack gap={4}>
+                                    <Box p={3} borderRadius="lg" bg={`${report.color}.100`} color={`${report.color}.600`}>
+                                        <IconComponent size={24} />
+                                    </Box>
+                                    <VStack align="start" gap={0}>
+                                        <Text fontWeight="semibold">{report.label}</Text>
+                                        <Text fontSize="sm" color="gray.500">{report.desc}</Text>
+                                    </VStack>
+                                </HStack>
+                            </Card.Body>
+                        </Card.Root>
+                    );
+                })}
+            </SimpleGrid>
 
-            <button
-                className={styles.downloadBtn}
-                onClick={downloadExcel}
-                disabled={loading}
-            >
-                {loading ? "Mengunduh..." : "📥 Download Excel"}
-            </button>
-        </div>
+            <HStack gap={4}>
+                <Button
+                    colorPalette="green"
+                    size="lg"
+                    onClick={downloadExcel}
+                    loading={loading}
+                >
+                    <FiDownload />
+                    Download Excel
+                </Button>
+                <Button
+                    colorPalette="red"
+                    size="lg"
+                    onClick={downloadPDF}
+                    loading={loading}
+                >
+                    <FiFileText />
+                    Download PDF
+                </Button>
+            </HStack>
+        </Box>
     );
 }

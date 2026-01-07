@@ -3,7 +3,20 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import styles from "./login.module.css";
+import {
+    Box,
+    Button,
+    Container,
+    Field,
+    Heading,
+    Input,
+    Text,
+    VStack,
+    Alert,
+    Card,
+    Group,
+} from "@chakra-ui/react";
+import { FiMail, FiLock } from "react-icons/fi";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -25,69 +38,93 @@ export default function LoginPage() {
             });
 
             if (result?.error) {
-                setError(result.error);
+                setError("Email atau password salah");
             } else {
-                // Redirect berdasarkan role akan ditangani di middleware
-                router.push("/dashboard");
+                router.push("/");
                 router.refresh();
             }
         } catch {
-            setError("Terjadi kesalahan. Silakan coba lagi.");
+            setError("Terjadi kesalahan");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className={styles.container}>
-            <div className={styles.card}>
-                <div className={styles.header}>
-                    <h1 className={styles.title}>Hanadap</h1>
-                    <p className={styles.subtitle}>Sistem Inventori FIFO</p>
-                </div>
+        <Box minH="100vh" bgGradient="to-br" gradientFrom="blue.500" gradientTo="blue.700" py={20}>
+            <Container maxW="md">
+                <VStack gap={8}>
+                    <VStack gap={2} textAlign="center">
+                        <Heading color="white" size="2xl" fontWeight="bold">
+                            Hanadap
+                        </Heading>
+                        <Text color="whiteAlpha.800" fontSize="lg">
+                            Sistem Inventori FIFO
+                        </Text>
+                    </VStack>
 
-                <form onSubmit={handleSubmit} className={styles.form}>
-                    {error && <div className={styles.error}>{error}</div>}
+                    <Card.Root w="full" shadow="2xl" borderRadius="2xl">
+                        <Card.Body p={8}>
+                            <form onSubmit={handleSubmit}>
+                                <VStack gap={5}>
+                                    <Heading size="md" color="gray.700">
+                                        Login
+                                    </Heading>
 
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="email" className={styles.label}>
-                            Email
-                        </label>
-                        <input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className={styles.input}
-                            placeholder="masukkan@email.com"
-                            required
-                        />
-                    </div>
+                                    {error && (
+                                        <Alert.Root status="error" borderRadius="lg">
+                                            <Alert.Indicator />
+                                            <Alert.Content>{error}</Alert.Content>
+                                        </Alert.Root>
+                                    )}
 
-                    <div className={styles.inputGroup}>
-                        <label htmlFor="password" className={styles.label}>
-                            Password
-                        </label>
-                        <input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className={styles.input}
-                            placeholder="••••••••"
-                            required
-                        />
-                    </div>
+                                    <Field.Root required>
+                                        <Field.Label color="gray.600">Email</Field.Label>
+                                        <Group w="full">
+                                            <FiMail color="gray" />
+                                            <Input
+                                                type="email"
+                                                value={email}
+                                                onChange={(e) => setEmail(e.target.value)}
+                                                placeholder="email@example.com"
+                                                size="lg"
+                                                borderRadius="lg"
+                                            />
+                                        </Group>
+                                    </Field.Root>
 
-                    <button
-                        type="submit"
-                        className={styles.button}
-                        disabled={loading}
-                    >
-                        {loading ? "Memproses..." : "Masuk"}
-                    </button>
-                </form>
-            </div>
-        </div>
+                                    <Field.Root required>
+                                        <Field.Label color="gray.600">Password</Field.Label>
+                                        <Group w="full">
+                                            <FiLock color="gray" />
+                                            <Input
+                                                type="password"
+                                                value={password}
+                                                onChange={(e) => setPassword(e.target.value)}
+                                                placeholder="••••••••"
+                                                size="lg"
+                                                borderRadius="lg"
+                                            />
+                                        </Group>
+                                    </Field.Root>
+
+                                    <Button
+                                        type="submit"
+                                        colorPalette="blue"
+                                        size="lg"
+                                        w="full"
+                                        loading={loading}
+                                        loadingText="Masuk..."
+                                        borderRadius="lg"
+                                    >
+                                        Masuk
+                                    </Button>
+                                </VStack>
+                            </form>
+                        </Card.Body>
+                    </Card.Root>
+                </VStack>
+            </Container>
+        </Box>
     );
 }

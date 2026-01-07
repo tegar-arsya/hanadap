@@ -1,143 +1,134 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import styles from "./kategori.module.css";
+import {
+    Box,
+    Heading,
+    Text,
+    VStack,
+    HStack,
+    Card,
+    Button,
+    Input,
+    Table,
+    IconButton,
+    Dialog,
+    Field,
+} from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 
 interface Kategori {
     id: string;
     nama: string;
-    _count: { barang: number };
+    _count?: { barang: number };
 }
 
 export default function AdminKategoriPage() {
     const [kategoriList, setKategoriList] = useState<Kategori[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
-    const [namaKategori, setNamaKategori] = useState("");
-    const [editId, setEditId] = useState<string | null>(null);
+    const [nama, setNama] = useState("");
+    const [isOpen, setIsOpen] = useState(false);
+
+    const showToast = (title: string, type: "success" | "info") => {
+        toaster.create({ title, type });
+    };
 
     const fetchKategori = async () => {
-        try {
-            const res = await fetch("/api/kategori");
-            const data = await res.json();
-            setKategoriList(data);
-        } catch (error) {
-            console.error("Error fetching kategori:", error);
-        } finally {
-            setLoading(false);
-        }
+        const res = await fetch("/api/kategori");
+        setKategoriList(await res.json());
+        setLoading(false);
     };
 
-    useEffect(() => {
+    useEffect(() => { fetchKategori(); }, []);
+
+    const handleAdd = async () => {
+        if (!nama) return;
+        await fetch("/api/kategori", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nama }),
+        });
+        showToast("Kategori ditambahkan", "success");
+        setNama("");
+        setIsOpen(false);
         fetchKategori();
-    }, []);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            if (editId) {
-                await fetch(`/api/kategori/${editId}`, {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ nama: namaKategori }),
-                });
-            } else {
-                await fetch("/api/kategori", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ nama: namaKategori }),
-                });
-            }
-            setNamaKategori("");
-            setEditId(null);
-            setShowForm(false);
-            fetchKategori();
-        } catch (error) {
-            console.error("Error saving kategori:", error);
-        }
-    };
-
-    const handleEdit = (kategori: Kategori) => {
-        setNamaKategori(kategori.nama);
-        setEditId(kategori.id);
-        setShowForm(true);
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Yakin ingin menghapus kategori ini?")) return;
-        try {
-            await fetch(`/api/kategori/${id}`, { method: "DELETE" });
-            fetchKategori();
-        } catch (error) {
-            console.error("Error deleting kategori:", error);
-        }
+        if (!confirm("Yakin ingin menghapus kategori?")) return;
+        await fetch(`/api/kategori/${id}`, { method: "DELETE" });
+        showToast("Kategori dihapus", "info");
+        fetchKategori();
     };
 
-    if (loading) return <div className={styles.loading}>Memuat...</div>;
-
     return (
-        <div className={styles.container}>
-            <div className={styles.header}>
-                <div>
-                    <h1 className={styles.title}>Kategori Barang</h1>
-                    <p className={styles.subtitle}>Kelola kategori untuk pengelompokan barang</p>
-                </div>
-                <button
-                    className={styles.addButton}
-                    onClick={() => {
-                        setShowForm(!showForm);
-                        setEditId(null);
-                        setNamaKategori("");
-                    }}
-                >
-                    {showForm ? "Batal" : "+ Tambah Kategori"}
-                </button>
-            </div>
+        <Box>
+            <HStack justify="space-between" mb={8}>
+                <VStack align="start" gap={1}>
+                    <Heading size="lg">Kategori</Heading>
+                    <Text color="gray.500">Kelola kategori barang</Text>
+                </VStack>
+                <Button colorPalette="blue" onClick={() => setIsOpen(true)}>
+                    <FiPlus />
+                    Tambah Kategori
+                </Button>
+            </HStack>
 
-            {showForm && (
-                <form onSubmit={handleSubmit} className={styles.form}>
-                    <input
-                        type="text"
-                        placeholder="Nama Kategori (ATK, Elektronik, dll)"
-                        value={namaKategori}
-                        onChange={(e) => setNamaKategori(e.target.value)}
-                        className={styles.input}
-                        required
-                    />
-                    <button type="submit" className={styles.submitButton}>
-                        {editId ? "Update" : "Simpan"}
-                    </button>
-                </form>
-            )}
+            <Card.Root>
+                <Card.Body p={0}>
+                    <Table.Root>
+                        <Table.Header>
+                            <Table.Row bg="gray.50">
+                                <Table.ColumnHeader>Nama Kategori</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="right">Jumlah Barang</Table.ColumnHeader>
+                                <Table.ColumnHeader w="100px">Aksi</Table.ColumnHeader>
+                            </Table.Row>
+                        </Table.Header>
+                        <Table.Body>
+                            {kategoriList.map((kat) => (
+                                <Table.Row key={kat.id}>
+                                    <Table.Cell fontWeight="medium">{kat.nama}</Table.Cell>
+                                    <Table.Cell textAlign="right">{kat._count?.barang || 0}</Table.Cell>
+                                    <Table.Cell>
+                                        <IconButton
+                                            aria-label="Delete"
+                                            size="sm"
+                                            colorPalette="red"
+                                            variant="ghost"
+                                            onClick={() => handleDelete(kat.id)}
+                                        >
+                                            <FiTrash2 />
+                                        </IconButton>
+                                    </Table.Cell>
+                                </Table.Row>
+                            ))}
+                        </Table.Body>
+                    </Table.Root>
+                </Card.Body>
+            </Card.Root>
 
-            <div className={styles.grid}>
-                {kategoriList.length === 0 ? (
-                    <div className={styles.empty}>Belum ada kategori</div>
-                ) : (
-                    kategoriList.map((kategori) => (
-                        <div key={kategori.id} className={styles.card}>
-                            <div className={styles.cardContent}>
-                                <h3 className={styles.cardTitle}>{kategori.nama}</h3>
-                                <span className={styles.count}>{kategori._count.barang} barang</span>
-                            </div>
-                            <div className={styles.cardActions}>
-                                <button
-                                    className={styles.editBtn}
-                                    onClick={() => handleEdit(kategori)}
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    className={styles.deleteBtn}
-                                    onClick={() => handleDelete(kategori.id)}
-                                >
-                                    Hapus
-                                </button>
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
-        </div>
+            <Dialog.Root open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                    <Dialog.Content>
+                        <Dialog.Header>
+                            <Dialog.Title>Tambah Kategori</Dialog.Title>
+                            <Dialog.CloseTrigger />
+                        </Dialog.Header>
+                        <Dialog.Body>
+                            <Field.Root>
+                                <Field.Label>Nama Kategori</Field.Label>
+                                <Input value={nama} onChange={(e) => setNama(e.target.value)} placeholder="ATK, Elektronik, dll" />
+                            </Field.Root>
+                        </Dialog.Body>
+                        <Dialog.Footer>
+                            <Button variant="ghost" mr={3} onClick={() => setIsOpen(false)}>Batal</Button>
+                            <Button colorPalette="blue" onClick={handleAdd}>Simpan</Button>
+                        </Dialog.Footer>
+                    </Dialog.Content>
+                </Dialog.Positioner>
+            </Dialog.Root>
+        </Box>
     );
 }
