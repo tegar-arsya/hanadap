@@ -56,6 +56,7 @@ model User {
   requests      Request[]
   transaksiLogs TransaksiLog[]
   notifikasi    Notifikasi[]
+  activityLogs  ActivityLog[]
 }
 
 // ============================================
@@ -183,4 +184,26 @@ model ApprovalLevel {
   nama      String   // Kepala Unit, Admin Gudang
   roleRequired String // Role yang bisa approve di level ini
   createdAt DateTime @default(now())
+}
+
+// ============================================
+// ActivityLog - Audit Trail
+// ============================================
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String   // LOGIN | CREATE | UPDATE | DELETE | APPROVE | REJECT | RETURN
+  entity      String   // User | Barang | Request | StockBatch | etc
+  entityId    String?  // ID of the affected entity
+  description String   // Human readable description
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([entity])
 }

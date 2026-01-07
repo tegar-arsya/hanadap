@@ -14,7 +14,9 @@ const adminMenus = [
     { href: "/admin/kategori", label: "Kategori", icon: "🏷️" },
     { href: "/admin/unit-kerja", label: "Unit Kerja", icon: "🏢" },
     { href: "/admin/approval", label: "Konfigurasi Approval", icon: "⚙️" },
+    { href: "/admin/activity", label: "Activity Log", icon: "📜" },
     { href: "/admin/laporan", label: "Laporan", icon: "📄" },
+    { href: "/profil", label: "Profil Saya", icon: "👤" },
 ];
 
 export default function AdminLayout({

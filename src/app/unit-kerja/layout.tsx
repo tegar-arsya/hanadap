@@ -11,6 +11,7 @@ const unitKerjaMenus = [
     { href: "/unit-kerja/request", label: "Ajukan Permintaan", icon: "📝" },
     { href: "/unit-kerja/tracking", label: "Tracking", icon: "🔍" },
     { href: "/unit-kerja/return", label: "Pengembalian", icon: "↩️" },
+    { href: "/profil", label: "Profil Saya", icon: "👤" },
 ];
 
 export default function UnitKerjaLayout({
