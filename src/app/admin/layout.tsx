@@ -10,6 +10,7 @@ const adminMenus = [
     { href: "/admin/stok", label: "Kelola Stok", icon: "📦" },
     { href: "/admin/scan", label: "Scan Barcode", icon: "📷" },
     { href: "/admin/request", label: "Permintaan", icon: "📋" },
+    { href: "/admin/users", label: "Manajemen User", icon: "👥" },
     { href: "/admin/kategori", label: "Kategori", icon: "🏷️" },
     { href: "/admin/unit-kerja", label: "Unit Kerja", icon: "🏢" },
     { href: "/admin/approval", label: "Konfigurasi Approval", icon: "⚙️" },

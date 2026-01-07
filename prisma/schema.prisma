@@ -47,6 +47,7 @@ model User {
   nama        String
   role        String     @default("UNIT_KERJA") // ADMIN | UNIT_KERJA | KEPALA_UNIT
   unitKerjaId String?
+  isActive    Boolean    @default(true)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
