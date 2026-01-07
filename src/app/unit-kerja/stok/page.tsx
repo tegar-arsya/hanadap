@@ -3,18 +3,15 @@
 import { useState, useEffect } from "react";
 import {
     Box,
-    Heading,
-    Text,
     VStack,
     SimpleGrid,
-    Card,
     Badge,
-    Input,
-    Group,
     HStack,
     Progress,
+    Text,
 } from "@chakra-ui/react";
-import { FiSearch, FiPackage } from "react-icons/fi";
+import { FiPackage } from "react-icons/fi";
+import { PageHeader, Card, SearchInput, LoadingCard, EmptyCard } from "@/components/ui/shared";
 
 interface Barang {
     id: string;
@@ -48,82 +45,90 @@ export default function UnitKerjaStokPage() {
     };
 
     return (
-        <Box>
-            <VStack align="start" gap={1} mb={8}>
-                <Heading size="lg">Lihat Stok</Heading>
-                <Text color="gray.500">Daftar barang yang tersedia</Text>
-            </VStack>
+        <>
+            <PageHeader
+                title="Lihat Stok"
+                description="Daftar barang yang tersedia"
+            />
 
-            <Card.Root mb={6}>
-                <Card.Body>
-                    <Group>
-                        <FiSearch color="gray" />
-                        <Input
-                            placeholder="Cari barang..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </Group>
-                </Card.Body>
-            </Card.Root>
+            <Card>
+                <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    placeholder="Cari barang..."
+                />
+            </Card>
 
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
-                {filteredBarang.map((barang) => {
-                    const color = getStokColor(barang.stokTotal, barang.stokMinimum);
-                    const progressValue = Math.min((barang.stokTotal / (barang.stokMinimum * 3)) * 100, 100);
+            <Box mt={6}>
+                {loading ? (
+                    <LoadingCard />
+                ) : filteredBarang.length === 0 ? (
+                    <EmptyCard
+                        icon={<FiPackage size={48} />}
+                        message="Tidak ada barang ditemukan"
+                        description="Coba ubah kata kunci pencarian"
+                    />
+                ) : (
+                    <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} gap={4}>
+                        {filteredBarang.map((barang) => {
+                            const color = getStokColor(barang.stokTotal, barang.stokMinimum);
+                            const progressValue = Math.min((barang.stokTotal / (barang.stokMinimum * 3)) * 100, 100);
 
-                    return (
-                        <Card.Root key={barang.id}>
-                            <Card.Body>
-                                <VStack align="stretch" gap={3}>
-                                    <HStack justify="space-between">
-                                        <HStack>
-                                            <FiPackage color="gray" />
-                                            <Text fontWeight="semibold" lineClamp={1}>
-                                                {barang.nama}
-                                            </Text>
+                            return (
+                                <Box
+                                    key={barang.id}
+                                    bg="var(--card-bg)"
+                                    borderRadius="xl"
+                                    border="1px solid"
+                                    borderColor="var(--card-border)"
+                                    p={5}
+                                    transition="all 0.2s"
+                                    _hover={{ boxShadow: "var(--card-shadow)" }}
+                                >
+                                    <VStack align="stretch" gap={3}>
+                                        <HStack justify="space-between">
+                                            <HStack>
+                                                <Box color="var(--sidebar-text-muted)">
+                                                    <FiPackage size={18} />
+                                                </Box>
+                                                <Text fontWeight="semibold" lineClamp={1} color="var(--foreground)">
+                                                    {barang.nama}
+                                                </Text>
+                                            </HStack>
+                                            <Badge colorPalette={color} variant="subtle">
+                                                {barang.stokTotal <= 0
+                                                    ? "Habis"
+                                                    : barang.stokTotal <= barang.stokMinimum
+                                                        ? "Menipis"
+                                                        : "Tersedia"}
+                                            </Badge>
                                         </HStack>
-                                        <Badge colorPalette={color}>
-                                            {barang.stokTotal <= 0
-                                                ? "Habis"
-                                                : barang.stokTotal <= barang.stokMinimum
-                                                    ? "Menipis"
-                                                    : "Tersedia"}
-                                        </Badge>
-                                    </HStack>
 
-                                    <Progress.Root value={progressValue} colorPalette={color} size="sm">
-                                        <Progress.Track borderRadius="full">
-                                            <Progress.Range />
-                                        </Progress.Track>
-                                    </Progress.Root>
+                                        <Progress.Root value={progressValue} colorPalette={color} size="sm">
+                                            <Progress.Track borderRadius="full" bg="var(--sidebar-hover)">
+                                                <Progress.Range />
+                                            </Progress.Track>
+                                        </Progress.Root>
 
-                                    <HStack justify="space-between" fontSize="sm" color="gray.500">
-                                        <Text>
-                                            Stok: <strong>{barang.stokTotal}</strong> {barang.satuan}
-                                        </Text>
-                                        <Text>Min: {barang.stokMinimum}</Text>
-                                    </HStack>
+                                        <HStack justify="space-between" fontSize="sm" color="var(--sidebar-text-muted)">
+                                            <Text>
+                                                Stok: <Text as="span" fontWeight="semibold" color="var(--foreground)">{barang.stokTotal}</Text> {barang.satuan}
+                                            </Text>
+                                            <Text>Min: {barang.stokMinimum}</Text>
+                                        </HStack>
 
-                                    {barang.kategori && (
-                                        <Badge variant="subtle" colorPalette="gray" w="fit-content">
-                                            {barang.kategori.nama}
-                                        </Badge>
-                                    )}
-                                </VStack>
-                            </Card.Body>
-                        </Card.Root>
-                    );
-                })}
-            </SimpleGrid>
-
-            {filteredBarang.length === 0 && !loading && (
-                <Card.Root>
-                    <Card.Body textAlign="center" py={10}>
-                        <Text color="gray.500">Tidak ada barang ditemukan</Text>
-                    </Card.Body>
-                </Card.Root>
-            )}
-        </Box>
+                                        {barang.kategori && (
+                                            <Badge variant="subtle" colorPalette="gray" w="fit-content">
+                                                {barang.kategori.nama}
+                                            </Badge>
+                                        )}
+                                    </VStack>
+                                </Box>
+                            );
+                        })}
+                    </SimpleGrid>
+                )}
+            </Box>
+        </>
     );
 }

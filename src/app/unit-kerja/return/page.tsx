@@ -3,34 +3,19 @@
 import { useState, useEffect } from "react";
 import {
     Box,
-    Heading,
     Text,
     VStack,
     HStack,
-    Card,
-    CardBody,
-    CardHeader,
     Button,
-    Select,
+    NativeSelect,
     NumberInput,
-    NumberInputField,
-    NumberInputStepper,
-    NumberIncrementStepper,
-    NumberDecrementStepper,
-    FormControl,
-    FormLabel,
+    Field,
     Textarea,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Badge,
-    useToast,
-    Divider,
 } from "@chakra-ui/react";
+import { toaster } from "@/components/ui/toaster";
 import { FiCornerDownLeft, FiSend } from "react-icons/fi";
+import { PageHeader, Card, EmptyStateBox, PrimaryButton, StyledInput } from "@/components/ui/shared";
 
 interface Barang {
     id: string;
@@ -50,10 +35,9 @@ export default function UnitKerjaReturnPage() {
     const [barangList, setBarangList] = useState<Barang[]>([]);
     const [history, setHistory] = useState<ReturnHistory[]>([]);
     const [selectedBarang, setSelectedBarang] = useState("");
-    const [jumlah, setJumlah] = useState(1);
+    const [jumlah, setJumlah] = useState("1");
     const [keterangan, setKeterangan] = useState("");
     const [loading, setLoading] = useState(false);
-    const toast = useToast();
 
     useEffect(() => {
         fetch("/api/barang").then((res) => res.json()).then(setBarangList);
@@ -66,115 +50,146 @@ export default function UnitKerjaReturnPage() {
         const res = await fetch("/api/return", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ barangId: selectedBarang, jumlah, keterangan }),
+            body: JSON.stringify({ barangId: selectedBarang, jumlah: parseInt(jumlah), keterangan }),
         });
 
         if (res.ok) {
-            toast({ title: "Pengembalian berhasil dicatat", status: "success" });
+            toaster.create({ title: "Pengembalian berhasil dicatat", type: "success" });
             setSelectedBarang("");
-            setJumlah(1);
+            setJumlah("1");
             setKeterangan("");
             const updatedHistory = await fetch("/api/return").then((r) => r.json());
             setHistory(updatedHistory);
         } else {
-            toast({ title: "Gagal mencatat pengembalian", status: "error" });
+            toaster.create({ title: "Gagal mencatat pengembalian", type: "error" });
         }
         setLoading(false);
     };
 
     return (
         <Box>
-            <VStack align="start" spacing={1} mb={8}>
-                <Heading size="lg">Pengembalian Barang</Heading>
-                <Text color="gray.500">Kembalikan barang yang tidak terpakai</Text>
-            </VStack>
+            <PageHeader title="Pengembalian Barang" subtitle="Kembalikan barang yang tidak terpakai" />
 
-            <Card mb={6}>
-                <CardHeader>
-                    <HStack>
+            <Card style={{ marginBottom: "1.5rem" }}>
+                <HStack mb={4}>
+                    <Box style={{ color: "var(--stat-purple-color)" }}>
                         <FiCornerDownLeft />
-                        <Text fontWeight="semibold">Form Pengembalian</Text>
-                    </HStack>
-                </CardHeader>
-                <CardBody pt={0}>
-                    <VStack spacing={4}>
-                        <FormControl isRequired>
-                            <FormLabel>Barang</FormLabel>
-                            <Select
-                                placeholder="Pilih barang"
+                    </Box>
+                    <Text fontWeight="semibold" style={{ color: "var(--foreground)" }}>
+                        Form Pengembalian
+                    </Text>
+                </HStack>
+
+                <VStack gap={4}>
+                    <Field.Root required width="100%">
+                        <Field.Label style={{ color: "var(--foreground)" }}>Barang</Field.Label>
+                        <NativeSelect.Root width="100%">
+                            <NativeSelect.Field
                                 value={selectedBarang}
                                 onChange={(e) => setSelectedBarang(e.target.value)}
+                                style={{
+                                    background: "var(--input-bg)",
+                                    borderColor: "var(--input-border)",
+                                    color: "var(--foreground)",
+                                }}
                             >
+                                <option value="" style={{ background: "var(--card-bg)" }}>Pilih barang</option>
                                 {barangList.map((b) => (
-                                    <option key={b.id} value={b.id}>{b.nama} ({b.satuan})</option>
+                                    <option key={b.id} value={b.id} style={{ background: "var(--card-bg)" }}>
+                                        {b.nama} ({b.satuan})
+                                    </option>
                                 ))}
-                            </Select>
-                        </FormControl>
+                            </NativeSelect.Field>
+                        </NativeSelect.Root>
+                    </Field.Root>
 
-                        <FormControl isRequired>
-                            <FormLabel>Jumlah</FormLabel>
-                            <NumberInput value={jumlah} onChange={(_, v) => setJumlah(v)} min={1}>
-                                <NumberInputField />
-                                <NumberInputStepper>
-                                    <NumberIncrementStepper />
-                                    <NumberDecrementStepper />
-                                </NumberInputStepper>
-                            </NumberInput>
-                        </FormControl>
-
-                        <FormControl>
-                            <FormLabel>Keterangan</FormLabel>
-                            <Textarea
-                                value={keterangan}
-                                onChange={(e) => setKeterangan(e.target.value)}
-                                placeholder="Alasan pengembalian (opsional)"
+                    <Field.Root required width="100%">
+                        <Field.Label style={{ color: "var(--foreground)" }}>Jumlah</Field.Label>
+                        <NumberInput.Root value={jumlah} onValueChange={(e) => setJumlah(e.value)} min={1} width="100%">
+                            <NumberInput.Input
+                                style={{
+                                    background: "var(--input-bg)",
+                                    borderColor: "var(--input-border)",
+                                    color: "var(--foreground)",
+                                }}
                             />
-                        </FormControl>
+                            <NumberInput.Control>
+                                <NumberInput.IncrementTrigger style={{ color: "var(--foreground)" }} />
+                                <NumberInput.DecrementTrigger style={{ color: "var(--foreground)" }} />
+                            </NumberInput.Control>
+                        </NumberInput.Root>
+                    </Field.Root>
 
-                        <Button
-                            leftIcon={<FiSend />}
-                            colorScheme="green"
-                            w="full"
-                            onClick={handleSubmit}
-                            isLoading={loading}
-                            isDisabled={!selectedBarang}
-                        >
-                            Kembalikan Barang
-                        </Button>
-                    </VStack>
-                </CardBody>
+                    <Field.Root width="100%">
+                        <Field.Label style={{ color: "var(--foreground)" }}>Keterangan</Field.Label>
+                        <Textarea
+                            value={keterangan}
+                            onChange={(e) => setKeterangan(e.target.value)}
+                            placeholder="Alasan pengembalian (opsional)"
+                            style={{
+                                background: "var(--input-bg)",
+                                borderColor: "var(--input-border)",
+                                color: "var(--foreground)",
+                            }}
+                        />
+                    </Field.Root>
+
+                    <Button
+                        w="full"
+                        onClick={handleSubmit}
+                        loading={loading}
+                        disabled={!selectedBarang}
+                        style={{
+                            background: "var(--stat-green-color)",
+                            color: "white",
+                            fontWeight: 600,
+                        }}
+                    >
+                        <FiSend />
+                        Kembalikan Barang
+                    </Button>
+                </VStack>
             </Card>
 
             <Card>
-                <CardHeader>
-                    <Text fontWeight="semibold">Riwayat Pengembalian</Text>
-                </CardHeader>
-                <CardBody pt={0}>
-                    {history.length === 0 ? (
-                        <Text color="gray.500" textAlign="center" py={6}>Belum ada pengembalian</Text>
-                    ) : (
-                        <Table size="sm">
-                            <Thead>
-                                <Tr>
-                                    <Th>Tanggal</Th>
-                                    <Th>Barang</Th>
-                                    <Th isNumeric>Jumlah</Th>
-                                    <Th>Keterangan</Th>
-                                </Tr>
-                            </Thead>
-                            <Tbody>
+                <Text fontWeight="semibold" mb={4} style={{ color: "var(--foreground)" }}>
+                    Riwayat Pengembalian
+                </Text>
+
+                {history.length === 0 ? (
+                    <Text textAlign="center" py={6} style={{ color: "var(--muted-foreground)" }}>
+                        Belum ada pengembalian
+                    </Text>
+                ) : (
+                    <Box overflowX="auto">
+                        <Table.Root size="sm">
+                            <Table.Header>
+                                <Table.Row style={{ background: "var(--table-header-bg)" }}>
+                                    <Table.ColumnHeader style={{ color: "var(--foreground)" }}>Tanggal</Table.ColumnHeader>
+                                    <Table.ColumnHeader style={{ color: "var(--foreground)" }}>Barang</Table.ColumnHeader>
+                                    <Table.ColumnHeader textAlign="right" style={{ color: "var(--foreground)" }}>Jumlah</Table.ColumnHeader>
+                                    <Table.ColumnHeader style={{ color: "var(--foreground)" }}>Keterangan</Table.ColumnHeader>
+                                </Table.Row>
+                            </Table.Header>
+                            <Table.Body>
                                 {history.map((item) => (
-                                    <Tr key={item.id}>
-                                        <Td>{new Date(item.createdAt).toLocaleDateString("id-ID")}</Td>
-                                        <Td>{item.barang.nama}</Td>
-                                        <Td isNumeric>{item.jumlah} {item.barang.satuan}</Td>
-                                        <Td>{item.keterangan || "-"}</Td>
-                                    </Tr>
+                                    <Table.Row key={item.id} style={{ borderColor: "var(--card-border)" }}>
+                                        <Table.Cell style={{ color: "var(--foreground)" }}>
+                                            {new Date(item.createdAt).toLocaleDateString("id-ID")}
+                                        </Table.Cell>
+                                        <Table.Cell style={{ color: "var(--foreground)" }}>{item.barang.nama}</Table.Cell>
+                                        <Table.Cell textAlign="right" style={{ color: "var(--foreground)" }}>
+                                            {item.jumlah} {item.barang.satuan}
+                                        </Table.Cell>
+                                        <Table.Cell style={{ color: "var(--muted-foreground)" }}>
+                                            {item.keterangan || "-"}
+                                        </Table.Cell>
+                                    </Table.Row>
                                 ))}
-                            </Tbody>
-                        </Table>
-                    )}
-                </CardBody>
+                            </Table.Body>
+                        </Table.Root>
+                    </Box>
+                )}
             </Card>
         </Box>
     );

@@ -3,24 +3,14 @@
 import { useState, useEffect } from "react";
 import {
     Box,
-    Heading,
     Text,
     VStack,
-    Card,
-    CardBody,
-    CardHeader,
-    Badge,
     HStack,
     Table,
-    Thead,
-    Tbody,
-    Tr,
-    Th,
-    Td,
-    Divider,
-    Icon,
+    Separator,
 } from "@chakra-ui/react";
 import { FiClock, FiCheck, FiX } from "react-icons/fi";
+import { PageHeader, Card, EmptyStateBox, StatusBadge } from "@/components/ui/shared";
 
 interface RequestItem {
     id: string;
@@ -60,96 +50,81 @@ export default function UnitKerjaTrackingPage() {
     const getStatusIcon = (status: string) => {
         switch (status) {
             case "PENDING":
-                return FiClock;
+                return <FiClock style={{ color: "var(--stat-orange-color)" }} />;
             case "APPROVED":
-                return FiCheck;
+                return <FiCheck style={{ color: "var(--stat-green-color)" }} />;
             case "REJECTED":
-                return FiX;
+                return <FiX style={{ color: "var(--stat-red-color)" }} />;
             default:
-                return FiClock;
-        }
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case "PENDING":
-                return "orange";
-            case "APPROVED":
-                return "green";
-            case "REJECTED":
-                return "red";
-            default:
-                return "gray";
+                return <FiClock style={{ color: "var(--muted-foreground)" }} />;
         }
     };
 
     return (
         <Box>
-            <VStack align="start" spacing={1} mb={8}>
-                <Heading size="lg">Tracking Permintaan</Heading>
-                <Text color="gray.500">Pantau status permintaan Anda</Text>
-            </VStack>
+            <PageHeader title="Tracking Permintaan" subtitle="Pantau status permintaan Anda" />
 
             {requests.length === 0 && !loading ? (
-                <Card>
-                    <CardBody textAlign="center" py={10}>
-                        <Text color="gray.500">Belum ada permintaan</Text>
-                    </CardBody>
-                </Card>
+                <EmptyStateBox message="Belum ada permintaan" />
             ) : (
-                <VStack spacing={4} align="stretch">
+                <VStack gap={4} align="stretch">
                     {requests.map((request) => (
                         <Card key={request.id}>
-                            <CardHeader pb={2}>
-                                <HStack justify="space-between">
-                                    <HStack>
-                                        <Icon
-                                            as={getStatusIcon(request.status)}
-                                            color={`${getStatusColor(request.status)}.500`}
-                                        />
-                                        <Text fontWeight="semibold">Request #{request.id.slice(-6)}</Text>
-                                    </HStack>
-                                    <HStack>
-                                        <Text fontSize="sm" color="gray.500">
-                                            {formatDate(request.createdAt)}
-                                        </Text>
-                                        <Badge colorScheme={getStatusColor(request.status)}>
-                                            {request.status}
-                                        </Badge>
-                                    </HStack>
+                            <HStack justify="space-between" mb={4} flexWrap="wrap" gap={2}>
+                                <HStack>
+                                    {getStatusIcon(request.status)}
+                                    <Text fontWeight="semibold" style={{ color: "var(--foreground)" }}>
+                                        Request #{request.id.slice(-6)}
+                                    </Text>
                                 </HStack>
-                            </CardHeader>
-                            <CardBody pt={0}>
-                                <Table size="sm" variant="simple">
-                                    <Thead>
-                                        <Tr>
-                                            <Th>Barang</Th>
-                                            <Th isNumeric>Diminta</Th>
-                                            <Th isNumeric>Disetujui</Th>
-                                        </Tr>
-                                    </Thead>
-                                    <Tbody>
-                                        {request.items.map((item) => (
-                                            <Tr key={item.id}>
-                                                <Td>{item.barang.nama}</Td>
-                                                <Td isNumeric>{item.jumlahDiminta} {item.barang.satuan}</Td>
-                                                <Td isNumeric color={item.jumlahDisetujui > 0 ? "green.500" : "gray.400"}>
-                                                    {item.jumlahDisetujui > 0 ? `${item.jumlahDisetujui} ${item.barang.satuan}` : "-"}
-                                                </Td>
-                                            </Tr>
-                                        ))}
-                                    </Tbody>
-                                </Table>
+                                <HStack>
+                                    <Text fontSize="sm" style={{ color: "var(--muted-foreground)" }}>
+                                        {formatDate(request.createdAt)}
+                                    </Text>
+                                    <StatusBadge status={request.status} />
+                                </HStack>
+                            </HStack>
 
-                                {request.catatan && (
-                                    <>
-                                        <Divider my={3} />
-                                        <Text fontSize="sm" color="gray.500">
-                                            Catatan: {request.catatan}
-                                        </Text>
-                                    </>
-                                )}
-                            </CardBody>
+                            <Box overflowX="auto">
+                                <Table.Root size="sm">
+                                    <Table.Header>
+                                        <Table.Row style={{ background: "var(--table-header-bg)" }}>
+                                            <Table.ColumnHeader style={{ color: "var(--foreground)" }}>Barang</Table.ColumnHeader>
+                                            <Table.ColumnHeader textAlign="right" style={{ color: "var(--foreground)" }}>Diminta</Table.ColumnHeader>
+                                            <Table.ColumnHeader textAlign="right" style={{ color: "var(--foreground)" }}>Disetujui</Table.ColumnHeader>
+                                        </Table.Row>
+                                    </Table.Header>
+                                    <Table.Body>
+                                        {request.items.map((item) => (
+                                            <Table.Row key={item.id} style={{ borderColor: "var(--card-border)" }}>
+                                                <Table.Cell style={{ color: "var(--foreground)" }}>{item.barang.nama}</Table.Cell>
+                                                <Table.Cell textAlign="right" style={{ color: "var(--foreground)" }}>
+                                                    {item.jumlahDiminta} {item.barang.satuan}
+                                                </Table.Cell>
+                                                <Table.Cell
+                                                    textAlign="right"
+                                                    style={{
+                                                        color: item.jumlahDisetujui > 0
+                                                            ? "var(--stat-green-color)"
+                                                            : "var(--muted-foreground)",
+                                                    }}
+                                                >
+                                                    {item.jumlahDisetujui > 0 ? `${item.jumlahDisetujui} ${item.barang.satuan}` : "-"}
+                                                </Table.Cell>
+                                            </Table.Row>
+                                        ))}
+                                    </Table.Body>
+                                </Table.Root>
+                            </Box>
+
+                            {request.catatan && (
+                                <>
+                                    <Separator my={3} style={{ borderColor: "var(--card-border)" }} />
+                                    <Text fontSize="sm" style={{ color: "var(--muted-foreground)" }}>
+                                        Catatan: {request.catatan}
+                                    </Text>
+                                </>
+                            )}
                         </Card>
                     ))}
                 </VStack>

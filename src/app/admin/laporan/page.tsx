@@ -5,24 +5,23 @@ import * as XLSX from "xlsx";
 import { pdfExports } from "@/lib/pdf-export";
 import {
     Box,
-    Heading,
     Text,
     VStack,
     HStack,
     SimpleGrid,
-    Card,
     Button,
 } from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
 import { FiDownload, FiFileText, FiPackage, FiList, FiAlertTriangle, FiLayers } from "react-icons/fi";
+import { PageHeader, Card } from "@/components/ui/shared";
 
 type ReportType = "stok" | "transaksi" | "fifo" | "expiry";
 
 const reports = [
-    { id: "stok" as const, label: "Laporan Stok", icon: FiPackage, desc: "Daftar semua barang dan stok", color: "blue" },
-    { id: "transaksi" as const, label: "Riwayat Transaksi", icon: FiList, desc: "Log masuk/keluar barang", color: "purple" },
-    { id: "fifo" as const, label: "Batch FIFO", icon: FiLayers, desc: "Detail batch per barang", color: "teal" },
-    { id: "expiry" as const, label: "Barang Kadaluarsa", icon: FiAlertTriangle, desc: "Barang mendekati expired", color: "orange" },
+    { id: "stok" as const, label: "Laporan Stok", icon: FiPackage, desc: "Daftar semua barang dan stok" },
+    { id: "transaksi" as const, label: "Riwayat Transaksi", icon: FiList, desc: "Log masuk/keluar barang" },
+    { id: "fifo" as const, label: "Batch FIFO", icon: FiLayers, desc: "Detail batch per barang" },
+    { id: "expiry" as const, label: "Barang Kadaluarsa", icon: FiAlertTriangle, desc: "Barang mendekati expired" },
 ];
 
 export default function AdminLaporanPage() {
@@ -114,56 +113,73 @@ export default function AdminLaporanPage() {
 
     return (
         <Box>
-            <VStack align="start" gap={1} mb={8}>
-                <Heading size="lg">Laporan</Heading>
-                <Text color="gray.500">Generate dan export laporan ke Excel atau PDF</Text>
-            </VStack>
+            <PageHeader title="Laporan" subtitle="Generate dan export laporan ke Excel atau PDF" />
 
             <SimpleGrid columns={{ base: 1, md: 2 }} gap={4} mb={8}>
                 {reports.map((report) => {
                     const IconComponent = report.icon;
+                    const isSelected = selectedReport === report.id;
                     return (
-                        <Card.Root
+                        <Box
                             key={report.id}
                             cursor="pointer"
                             onClick={() => setSelectedReport(report.id)}
-                            borderWidth={2}
-                            borderColor={selectedReport === report.id ? `${report.color}.500` : "transparent"}
-                            bg={selectedReport === report.id ? `${report.color}.50` : "white"}
+                            borderRadius="xl"
+                            padding="1.25rem"
                             transition="all 0.2s"
-                            _hover={{ borderColor: `${report.color}.200` }}
+                            style={{
+                                background: isSelected ? "var(--stat-blue-bg)" : "var(--card-bg)",
+                                border: `2px solid ${isSelected ? "var(--stat-blue-color)" : "var(--card-border)"}`,
+                                boxShadow: "var(--card-shadow)",
+                            }}
+                            _hover={{
+                                borderColor: "var(--stat-blue-color)",
+                            }}
                         >
-                            <Card.Body>
-                                <HStack gap={4}>
-                                    <Box p={3} borderRadius="lg" bg={`${report.color}.100`} color={`${report.color}.600`}>
-                                        <IconComponent size={24} />
-                                    </Box>
-                                    <VStack align="start" gap={0}>
-                                        <Text fontWeight="semibold">{report.label}</Text>
-                                        <Text fontSize="sm" color="gray.500">{report.desc}</Text>
-                                    </VStack>
-                                </HStack>
-                            </Card.Body>
-                        </Card.Root>
+                            <HStack gap={4}>
+                                <Box
+                                    p={3}
+                                    borderRadius="lg"
+                                    style={{
+                                        background: "var(--stat-blue-bg)",
+                                        color: "var(--stat-blue-color)",
+                                    }}
+                                >
+                                    <IconComponent size={24} />
+                                </Box>
+                                <VStack align="start" gap={0}>
+                                    <Text fontWeight="semibold" style={{ color: "var(--foreground)" }}>{report.label}</Text>
+                                    <Text fontSize="sm" style={{ color: "var(--muted-foreground)" }}>{report.desc}</Text>
+                                </VStack>
+                            </HStack>
+                        </Box>
                     );
                 })}
             </SimpleGrid>
 
-            <HStack gap={4}>
+            <HStack gap={4} flexWrap="wrap">
                 <Button
-                    colorPalette="green"
                     size="lg"
                     onClick={downloadExcel}
                     loading={loading}
+                    style={{
+                        background: "var(--stat-green-bg)",
+                        color: "var(--stat-green-color)",
+                        fontWeight: 600,
+                    }}
                 >
                     <FiDownload />
                     Download Excel
                 </Button>
                 <Button
-                    colorPalette="red"
                     size="lg"
                     onClick={downloadPDF}
                     loading={loading}
+                    style={{
+                        background: "var(--stat-red-bg)",
+                        color: "var(--stat-red-color)",
+                        fontWeight: 600,
+                    }}
                 >
                     <FiFileText />
                     Download PDF

@@ -3,22 +3,19 @@
 import { useState, useEffect } from "react";
 import {
     Box,
-    Heading,
     Text,
     VStack,
     HStack,
-    Card,
     Button,
-    Input,
     Group,
     NumberInput,
     Field,
     Alert,
     Separator,
-    Progress,
 } from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
 import { FiCamera, FiSearch, FiPackage, FiPlus } from "react-icons/fi";
+import { PageHeader, Card, PrimaryButton, StyledInput } from "@/components/ui/shared";
 
 interface Barang {
     id: string;
@@ -74,91 +71,113 @@ export default function AdminScanPage() {
 
     return (
         <Box maxW="600px">
-            <VStack align="start" gap={1} mb={8}>
-                <Heading size="lg">Scan Barcode</Heading>
-                <Text color="gray.500">Scan atau input barcode untuk tambah stok cepat</Text>
-            </VStack>
+            <PageHeader title="Scan Barcode" subtitle="Scan atau input barcode untuk tambah stok cepat" />
 
-            <Card.Root mb={6}>
-                <Card.Header pb={2}>
-                    <Text fontWeight="semibold">Input Barcode</Text>
-                </Card.Header>
-                <Card.Body pt={0}>
-                    <HStack>
-                        <Group flex={1}>
+            <Card style={{ marginBottom: "1.5rem" }}>
+                <Text fontWeight="semibold" mb={3} style={{ color: "var(--foreground)" }}>Input Barcode</Text>
+                <HStack>
+                    <Group flex={1}>
+                        <Box style={{ color: "var(--muted-foreground)" }}>
                             <FiCamera />
-                            <Input
-                                placeholder="Scan atau ketik barcode..."
-                                value={barcode}
-                                onChange={(e) => setBarcode(e.target.value)}
-                                onKeyDown={(e) => e.key === "Enter" && lookupBarang()}
-                            />
-                        </Group>
-                        <Button colorPalette="blue" onClick={lookupBarang}>
-                            <FiSearch />
-                            Cari
-                        </Button>
-                    </HStack>
-                    <Text fontSize="sm" color="gray.500" mt={2}>
-                        Tekan Enter atau klik Cari setelah scan/input barcode
-                    </Text>
-                </Card.Body>
-            </Card.Root>
+                        </Box>
+                        <StyledInput
+                            placeholder="Scan atau ketik barcode..."
+                            value={barcode}
+                            onChange={(e) => setBarcode(e.target.value)}
+                            onKeyDown={(e) => e.key === "Enter" && lookupBarang()}
+                        />
+                    </Group>
+                    <PrimaryButton onClick={lookupBarang}>
+                        <FiSearch />
+                        Cari
+                    </PrimaryButton>
+                </HStack>
+                <Text fontSize="sm" mt={2} style={{ color: "var(--muted-foreground)" }}>
+                    Tekan Enter atau klik Cari setelah scan/input barcode
+                </Text>
+            </Card>
 
             {notFound && (
-                <Alert.Root status="warning" borderRadius="lg" mb={6}>
+                <Alert.Root
+                    status="warning"
+                    borderRadius="lg"
+                    mb={6}
+                    style={{
+                        background: "var(--stat-orange-bg)",
+                        borderColor: "var(--stat-orange-color)",
+                    }}
+                >
                     <Alert.Indicator />
-                    <Alert.Content>
+                    <Alert.Content style={{ color: "var(--stat-orange-color)" }}>
                         Barcode tidak ditemukan: <strong>{barcode}</strong>
                     </Alert.Content>
                 </Alert.Root>
             )}
 
             {foundBarang && (
-                <Card.Root>
-                    <Card.Header bg="green.50" borderTopRadius="lg">
+                <Card>
+                    <HStack mb={4}>
+                        <Box style={{ color: "var(--stat-green-color)" }}>
+                            <FiPackage />
+                        </Box>
+                        <Text fontWeight="semibold" style={{ color: "var(--stat-green-color)" }}>
+                            Barang Ditemukan
+                        </Text>
+                    </HStack>
+
+                    <VStack align="stretch" gap={4}>
+                        <Box>
+                            <Text fontSize="xl" fontWeight="bold" style={{ color: "var(--foreground)" }}>
+                                {foundBarang.nama}
+                            </Text>
+                            <Text style={{ color: "var(--muted-foreground)" }}>
+                                Stok saat ini: {foundBarang.stokTotal} {foundBarang.satuan}
+                            </Text>
+                        </Box>
+
+                        <Separator style={{ borderColor: "var(--card-border)" }} />
+
+                        <Field.Root>
+                            <Field.Label style={{ color: "var(--foreground)" }}>Jumlah yang ditambahkan</Field.Label>
+                            <NumberInput.Root value={jumlah} onValueChange={(e) => setJumlah(e.value)} min={1}>
+                                <NumberInput.Input
+                                    style={{
+                                        background: "var(--input-bg)",
+                                        borderColor: "var(--input-border)",
+                                        color: "var(--foreground)",
+                                    }}
+                                />
+                                <NumberInput.Control>
+                                    <NumberInput.IncrementTrigger style={{ color: "var(--foreground)" }} />
+                                    <NumberInput.DecrementTrigger style={{ color: "var(--foreground)" }} />
+                                </NumberInput.Control>
+                            </NumberInput.Root>
+                        </Field.Root>
+
                         <HStack>
-                            <FiPackage color="green" />
-                            <Text fontWeight="semibold" color="green.700">Barang Ditemukan</Text>
+                            <Button
+                                flex={1}
+                                onClick={handleAddStock}
+                                loading={loading}
+                                style={{
+                                    background: "var(--stat-green-color)",
+                                    color: "white",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                <FiPlus />
+                                Tambah Stok
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                onClick={() => { setFoundBarang(null); setBarcode(""); }}
+                                style={{ color: "var(--foreground)" }}
+                            >
+                                Batal
+                            </Button>
                         </HStack>
-                    </Card.Header>
-                    <Card.Body>
-                        <VStack align="stretch" gap={4}>
-                            <Box>
-                                <Text fontSize="xl" fontWeight="bold">{foundBarang.nama}</Text>
-                                <Text color="gray.500">Stok saat ini: {foundBarang.stokTotal} {foundBarang.satuan}</Text>
-                            </Box>
-
-                            <Separator />
-
-                            <Field.Root>
-                                <Field.Label>Jumlah yang ditambahkan</Field.Label>
-                                <NumberInput.Root value={jumlah} onValueChange={(e) => setJumlah(e.value)} min={1}>
-                                    <NumberInput.Input />
-                                    <NumberInput.Control>
-                                        <NumberInput.IncrementTrigger />
-                                        <NumberInput.DecrementTrigger />
-                                    </NumberInput.Control>
-                                </NumberInput.Root>
-                            </Field.Root>
-
-                            <HStack>
-                                <Button
-                                    colorPalette="green"
-                                    flex={1}
-                                    onClick={handleAddStock}
-                                    loading={loading}
-                                >
-                                    <FiPlus />
-                                    Tambah Stok
-                                </Button>
-                                <Button variant="ghost" onClick={() => { setFoundBarang(null); setBarcode(""); }}>
-                                    Batal
-                                </Button>
-                            </HStack>
-                        </VStack>
-                    </Card.Body>
-                </Card.Root>
+                    </VStack>
+                </Card>
             )}
         </Box>
     );

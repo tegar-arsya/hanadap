@@ -2,21 +2,18 @@
 
 import { useState, useEffect } from "react";
 import {
-    Box,
-    Heading,
-    Text,
     VStack,
-    HStack,
-    Card,
     Button,
     Input,
     Table,
     IconButton,
     Dialog,
     Field,
+    Box,
 } from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { PageHeader, Card, PrimaryButton, TableLoadingRow, TableEmptyRow } from "@/components/ui/shared";
 
 interface Kategori {
     id: string;
@@ -63,72 +60,87 @@ export default function AdminKategoriPage() {
     };
 
     return (
-        <Box>
-            <HStack justify="space-between" mb={8}>
-                <VStack align="start" gap={1}>
-                    <Heading size="lg">Kategori</Heading>
-                    <Text color="gray.500">Kelola kategori barang</Text>
-                </VStack>
-                <Button colorPalette="blue" onClick={() => setIsOpen(true)}>
-                    <FiPlus />
+        <>
+            <PageHeader
+                title="Kategori"
+                description="Kelola kategori barang"
+            >
+                <PrimaryButton icon={FiPlus} onClick={() => setIsOpen(true)}>
                     Tambah Kategori
-                </Button>
-            </HStack>
+                </PrimaryButton>
+            </PageHeader>
 
-            <Card.Root>
-                <Card.Body p={0}>
-                    <Table.Root>
+            <Card>
+                <Box overflowX="auto" mx={-5} mb={-5}>
+                    <Table.Root size="sm">
                         <Table.Header>
-                            <Table.Row bg="gray.50">
-                                <Table.ColumnHeader>Nama Kategori</Table.ColumnHeader>
-                                <Table.ColumnHeader textAlign="right">Jumlah Barang</Table.ColumnHeader>
-                                <Table.ColumnHeader w="100px">Aksi</Table.ColumnHeader>
+                            <Table.Row bg="var(--table-header-bg)">
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider">Nama Kategori</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider" textAlign="right">Jumlah Barang</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider" w="100px">Aksi</Table.ColumnHeader>
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
-                            {kategoriList.map((kat) => (
-                                <Table.Row key={kat.id}>
-                                    <Table.Cell fontWeight="medium">{kat.nama}</Table.Cell>
-                                    <Table.Cell textAlign="right">{kat._count?.barang || 0}</Table.Cell>
-                                    <Table.Cell>
-                                        <IconButton
-                                            aria-label="Delete"
-                                            size="sm"
-                                            colorPalette="red"
-                                            variant="ghost"
-                                            onClick={() => handleDelete(kat.id)}
-                                        >
-                                            <FiTrash2 />
-                                        </IconButton>
-                                    </Table.Cell>
-                                </Table.Row>
-                            ))}
+                            {loading ? (
+                                <TableLoadingRow colSpan={3} />
+                            ) : kategoriList.length === 0 ? (
+                                <TableEmptyRow
+                                    colSpan={3}
+                                    message="Tidak ada kategori"
+                                    description="Tambahkan kategori baru"
+                                />
+                            ) : (
+                                kategoriList.map((kat) => (
+                                    <Table.Row key={kat.id} _hover={{ bg: "var(--table-row-hover)" }}>
+                                        <Table.Cell px={5} py={3} fontWeight="medium" color="var(--foreground)">{kat.nama}</Table.Cell>
+                                        <Table.Cell px={5} py={3} textAlign="right" color="var(--foreground)">{kat._count?.barang || 0}</Table.Cell>
+                                        <Table.Cell px={5} py={3}>
+                                            <IconButton
+                                                aria-label="Delete"
+                                                size="xs"
+                                                colorPalette="red"
+                                                variant="ghost"
+                                                onClick={() => handleDelete(kat.id)}
+                                            >
+                                                <FiTrash2 />
+                                            </IconButton>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ))
+                            )}
                         </Table.Body>
                     </Table.Root>
-                </Card.Body>
-            </Card.Root>
+                </Box>
+            </Card>
 
             <Dialog.Root open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
-                <Dialog.Backdrop />
+                <Dialog.Backdrop bg="blackAlpha.600" />
                 <Dialog.Positioner>
-                    <Dialog.Content>
-                        <Dialog.Header>
-                            <Dialog.Title>Tambah Kategori</Dialog.Title>
+                    <Dialog.Content bg="var(--card-bg)" borderColor="var(--card-border)">
+                        <Dialog.Header borderBottom="1px solid" borderColor="var(--card-border)">
+                            <Dialog.Title color="var(--foreground)">Tambah Kategori</Dialog.Title>
                             <Dialog.CloseTrigger />
                         </Dialog.Header>
-                        <Dialog.Body>
+                        <Dialog.Body py={5}>
                             <Field.Root>
-                                <Field.Label>Nama Kategori</Field.Label>
-                                <Input value={nama} onChange={(e) => setNama(e.target.value)} placeholder="ATK, Elektronik, dll" />
+                                <Field.Label color="var(--foreground)">Nama Kategori</Field.Label>
+                                <Input
+                                    value={nama}
+                                    onChange={(e) => setNama(e.target.value)}
+                                    placeholder="ATK, Elektronik, dll"
+                                    bg="var(--input-bg)"
+                                    borderColor="var(--input-border)"
+                                    color="var(--foreground)"
+                                />
                             </Field.Root>
                         </Dialog.Body>
-                        <Dialog.Footer>
+                        <Dialog.Footer borderTop="1px solid" borderColor="var(--card-border)">
                             <Button variant="ghost" mr={3} onClick={() => setIsOpen(false)}>Batal</Button>
                             <Button colorPalette="blue" onClick={handleAdd}>Simpan</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>
             </Dialog.Root>
-        </Box>
+        </>
     );
 }

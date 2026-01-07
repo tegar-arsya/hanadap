@@ -3,11 +3,8 @@
 import { useState, useEffect } from "react";
 import {
     Box,
-    Heading,
-    Text,
     VStack,
     HStack,
-    Card,
     Button,
     Input,
     Table,
@@ -16,9 +13,11 @@ import {
     Dialog,
     Field,
     NumberInput,
+    Text,
 } from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
+import { PageHeader, Card, PrimaryButton, StyledInput } from "@/components/ui/shared";
 
 interface UnitKerja {
     id: string;
@@ -71,43 +70,49 @@ export default function AdminUnitKerjaPage() {
 
     return (
         <Box>
-            <HStack justify="space-between" mb={8}>
-                <VStack align="start" gap={1}>
-                    <Heading size="lg">Unit Kerja</Heading>
-                    <Text color="gray.500">Kelola departemen dan quota</Text>
-                </VStack>
-                <Button colorPalette="blue" onClick={() => setIsOpen(true)}>
+            <HStack justify="space-between" mb={8} flexWrap="wrap" gap={4}>
+                <PageHeader title="Unit Kerja" subtitle="Kelola departemen dan quota" />
+                <PrimaryButton onClick={() => setIsOpen(true)}>
                     <FiPlus />
                     Tambah Unit
-                </Button>
+                </PrimaryButton>
             </HStack>
 
-            <Card.Root>
-                <Card.Body p={0}>
+            <Card>
+                <Box overflowX="auto">
                     <Table.Root>
                         <Table.Header>
-                            <Table.Row bg="gray.50">
-                                <Table.ColumnHeader>Nama Unit</Table.ColumnHeader>
-                                <Table.ColumnHeader>Kode</Table.ColumnHeader>
-                                <Table.ColumnHeader textAlign="right">Quota/Bulan</Table.ColumnHeader>
-                                <Table.ColumnHeader textAlign="right">Anggota</Table.ColumnHeader>
-                                <Table.ColumnHeader w="100px">Aksi</Table.ColumnHeader>
+                            <Table.Row style={{ background: "var(--table-header-bg)" }}>
+                                <Table.ColumnHeader style={{ color: "var(--foreground)" }}>Nama Unit</Table.ColumnHeader>
+                                <Table.ColumnHeader style={{ color: "var(--foreground)" }}>Kode</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="right" style={{ color: "var(--foreground)" }}>Quota/Bulan</Table.ColumnHeader>
+                                <Table.ColumnHeader textAlign="right" style={{ color: "var(--foreground)" }}>Anggota</Table.ColumnHeader>
+                                <Table.ColumnHeader w="100px" style={{ color: "var(--foreground)" }}>Aksi</Table.ColumnHeader>
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
                             {unitList.map((unit) => (
-                                <Table.Row key={unit.id}>
-                                    <Table.Cell fontWeight="medium">{unit.nama}</Table.Cell>
-                                    <Table.Cell><Badge colorPalette="blue">{unit.kode}</Badge></Table.Cell>
-                                    <Table.Cell textAlign="right">{unit.quotaBulanan}</Table.Cell>
-                                    <Table.Cell textAlign="right">{unit._count?.users || 0}</Table.Cell>
+                                <Table.Row key={unit.id} style={{ borderColor: "var(--card-border)" }}>
+                                    <Table.Cell fontWeight="medium" style={{ color: "var(--foreground)" }}>{unit.nama}</Table.Cell>
+                                    <Table.Cell>
+                                        <Badge
+                                            style={{
+                                                background: "var(--stat-blue-bg)",
+                                                color: "var(--stat-blue-color)",
+                                            }}
+                                        >
+                                            {unit.kode}
+                                        </Badge>
+                                    </Table.Cell>
+                                    <Table.Cell textAlign="right" style={{ color: "var(--foreground)" }}>{unit.quotaBulanan}</Table.Cell>
+                                    <Table.Cell textAlign="right" style={{ color: "var(--foreground)" }}>{unit._count?.users || 0}</Table.Cell>
                                     <Table.Cell>
                                         <IconButton
                                             aria-label="Delete"
                                             size="sm"
-                                            colorPalette="red"
                                             variant="ghost"
                                             onClick={() => handleDelete(unit.id)}
+                                            style={{ color: "var(--stat-red-color)" }}
                                         >
                                             <FiTrash2 />
                                         </IconButton>
@@ -116,38 +121,51 @@ export default function AdminUnitKerjaPage() {
                             ))}
                         </Table.Body>
                     </Table.Root>
-                </Card.Body>
-            </Card.Root>
+                </Box>
+            </Card>
 
             <Dialog.Root open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
-                        <Dialog.Header>
-                            <Dialog.Title>Tambah Unit Kerja</Dialog.Title>
+                    <Dialog.Content style={{ background: "var(--card-bg)", borderColor: "var(--card-border)" }}>
+                        <Dialog.Header style={{ borderColor: "var(--card-border)" }}>
+                            <Dialog.Title style={{ color: "var(--foreground)" }}>Tambah Unit Kerja</Dialog.Title>
                             <Dialog.CloseTrigger />
                         </Dialog.Header>
                         <Dialog.Body>
                             <VStack gap={4}>
                                 <Field.Root required>
-                                    <Field.Label>Nama</Field.Label>
-                                    <Input value={nama} onChange={(e) => setNama(e.target.value)} placeholder="IT Department" />
+                                    <Field.Label style={{ color: "var(--foreground)" }}>Nama</Field.Label>
+                                    <StyledInput value={nama} onChange={(e) => setNama(e.target.value)} placeholder="IT Department" />
                                 </Field.Root>
                                 <Field.Root required>
-                                    <Field.Label>Kode</Field.Label>
-                                    <Input value={kode} onChange={(e) => setKode(e.target.value)} placeholder="IT" />
+                                    <Field.Label style={{ color: "var(--foreground)" }}>Kode</Field.Label>
+                                    <StyledInput value={kode} onChange={(e) => setKode(e.target.value)} placeholder="IT" />
                                 </Field.Root>
                                 <Field.Root>
-                                    <Field.Label>Quota Bulanan</Field.Label>
+                                    <Field.Label style={{ color: "var(--foreground)" }}>Quota Bulanan</Field.Label>
                                     <NumberInput.Root value={quota} onValueChange={(e) => setQuota(e.value)} min={1}>
-                                        <NumberInput.Input />
+                                        <NumberInput.Input
+                                            style={{
+                                                background: "var(--input-bg)",
+                                                borderColor: "var(--input-border)",
+                                                color: "var(--foreground)",
+                                            }}
+                                        />
                                     </NumberInput.Root>
                                 </Field.Root>
                             </VStack>
                         </Dialog.Body>
-                        <Dialog.Footer>
-                            <Button variant="ghost" mr={3} onClick={() => setIsOpen(false)}>Batal</Button>
-                            <Button colorPalette="blue" onClick={handleAdd}>Simpan</Button>
+                        <Dialog.Footer style={{ borderColor: "var(--card-border)" }}>
+                            <Button
+                                variant="ghost"
+                                mr={3}
+                                onClick={() => setIsOpen(false)}
+                                style={{ color: "var(--foreground)" }}
+                            >
+                                Batal
+                            </Button>
+                            <PrimaryButton onClick={handleAdd}>Simpan</PrimaryButton>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>

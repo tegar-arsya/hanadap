@@ -3,17 +3,16 @@
 import { useState, useEffect } from "react";
 import {
     Box,
-    Heading,
-    Text,
     VStack,
     HStack,
-    Card,
     Badge,
     NativeSelect,
     Button,
     Flex,
+    Text,
 } from "@chakra-ui/react";
-import { FiActivity, FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { PageHeader, Card, EmptyStateBox } from "@/components/ui/shared";
 
 interface ActivityLog {
     id: string;
@@ -24,14 +23,14 @@ interface ActivityLog {
     user: { nama: string };
 }
 
-const ACTION_COLORS: Record<string, string> = {
-    LOGIN: "blue",
-    CREATE: "green",
-    UPDATE: "orange",
-    DELETE: "red",
-    APPROVE: "teal",
-    REJECT: "pink",
-    RETURN: "purple",
+const ACTION_COLORS: Record<string, { bg: string; color: string }> = {
+    LOGIN: { bg: "var(--stat-blue-bg)", color: "var(--stat-blue-color)" },
+    CREATE: { bg: "var(--stat-green-bg)", color: "var(--stat-green-color)" },
+    UPDATE: { bg: "var(--stat-orange-bg)", color: "var(--stat-orange-color)" },
+    DELETE: { bg: "var(--stat-red-bg)", color: "var(--stat-red-color)" },
+    APPROVE: { bg: "var(--stat-green-bg)", color: "var(--stat-green-color)" },
+    REJECT: { bg: "var(--stat-red-bg)", color: "var(--stat-red-color)" },
+    RETURN: { bg: "var(--stat-purple-bg)", color: "var(--stat-purple-color)" },
 };
 
 const ENTITIES = ["User", "Barang", "Request", "StockBatch", "Kategori", "UnitKerja"];
@@ -62,51 +61,70 @@ export default function AdminActivityPage() {
             hour: "2-digit", minute: "2-digit",
         });
 
+    const actionStyle = (action: string) => ACTION_COLORS[action] || { bg: "var(--card-bg)", color: "var(--foreground)" };
+
     return (
         <Box>
-            <VStack align="start" gap={1} mb={8}>
-                <Heading size="lg">Activity Log</Heading>
-                <Text color="gray.500">Riwayat aktivitas pengguna sistem</Text>
-            </VStack>
+            <PageHeader title="Activity Log" subtitle="Riwayat aktivitas pengguna sistem" />
 
-            <Card.Root mb={6}>
-                <Card.Body>
-                    <NativeSelect.Root maxW="250px">
-                        <NativeSelect.Field
-                            value={entityFilter}
-                            onChange={(e) => { setEntityFilter(e.target.value); setPage(1); }}
-                        >
-                            <option value="">Semua Entity</option>
-                            {ENTITIES.map((e) => <option key={e} value={e}>{e}</option>)}
-                        </NativeSelect.Field>
-                    </NativeSelect.Root>
-                </Card.Body>
-            </Card.Root>
+            <Card style={{ marginBottom: "1.5rem" }}>
+                <NativeSelect.Root maxW="250px">
+                    <NativeSelect.Field
+                        value={entityFilter}
+                        onChange={(e) => { setEntityFilter(e.target.value); setPage(1); }}
+                        style={{
+                            background: "var(--input-bg)",
+                            borderColor: "var(--input-border)",
+                            color: "var(--foreground)",
+                        }}
+                    >
+                        <option value="" style={{ background: "var(--card-bg)" }}>Semua Entity</option>
+                        {ENTITIES.map((e) => <option key={e} value={e} style={{ background: "var(--card-bg)" }}>{e}</option>)}
+                    </NativeSelect.Field>
+                </NativeSelect.Root>
+            </Card>
 
             {logs.length === 0 && !loading ? (
-                <Card.Root><Card.Body textAlign="center" py={10}><Text color="gray.500">Belum ada aktivitas</Text></Card.Body></Card.Root>
+                <EmptyStateBox message="Belum ada aktivitas" />
             ) : (
                 <VStack gap={3} align="stretch">
                     {logs.map((log) => (
-                        <Card.Root key={log.id}>
-                            <Card.Body py={3}>
-                                <HStack gap={4}>
-                                    <Badge colorPalette={ACTION_COLORS[log.action] || "gray"} fontSize="xs">
-                                        {log.action}
-                                    </Badge>
-                                    <VStack align="start" gap={0} flex={1}>
-                                        <Text fontSize="sm">{log.description}</Text>
-                                        <HStack fontSize="xs" color="gray.500">
-                                            <Text fontWeight="medium">{log.user.nama}</Text>
-                                            <Text>•</Text>
-                                            <Badge size="sm" variant="subtle">{log.entity}</Badge>
-                                            <Text>•</Text>
-                                            <Text>{formatDate(log.createdAt)}</Text>
-                                        </HStack>
-                                    </VStack>
-                                </HStack>
-                            </Card.Body>
-                        </Card.Root>
+                        <Card key={log.id}>
+                            <HStack gap={4}>
+                                <Box
+                                    px={3}
+                                    py={1}
+                                    borderRadius="full"
+                                    fontSize="xs"
+                                    fontWeight="bold"
+                                    style={{
+                                        background: actionStyle(log.action).bg,
+                                        color: actionStyle(log.action).color,
+                                    }}
+                                >
+                                    {log.action}
+                                </Box>
+                                <VStack align="start" gap={0} flex={1}>
+                                    <Text fontSize="sm" style={{ color: "var(--foreground)" }}>{log.description}</Text>
+                                    <HStack fontSize="xs" style={{ color: "var(--muted-foreground)" }}>
+                                        <Text fontWeight="medium">{log.user.nama}</Text>
+                                        <Text>•</Text>
+                                        <Badge
+                                            size="sm"
+                                            variant="subtle"
+                                            style={{
+                                                background: "var(--input-bg)",
+                                                color: "var(--foreground)",
+                                            }}
+                                        >
+                                            {log.entity}
+                                        </Badge>
+                                        <Text>•</Text>
+                                        <Text>{formatDate(log.createdAt)}</Text>
+                                    </HStack>
+                                </VStack>
+                            </HStack>
+                        </Card>
                     ))}
                 </VStack>
             )}
@@ -117,15 +135,27 @@ export default function AdminActivityPage() {
                         size="sm"
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
+                        style={{
+                            background: "var(--input-bg)",
+                            color: "var(--foreground)",
+                            borderColor: "var(--input-border)",
+                        }}
                     >
                         <FiChevronLeft />
                         Sebelumnya
                     </Button>
-                    <Text fontSize="sm" color="gray.500">Halaman {page} dari {totalPages}</Text>
+                    <Text fontSize="sm" style={{ color: "var(--muted-foreground)" }}>
+                        Halaman {page} dari {totalPages}
+                    </Text>
                     <Button
                         size="sm"
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
+                        style={{
+                            background: "var(--input-bg)",
+                            color: "var(--foreground)",
+                            borderColor: "var(--input-border)",
+                        }}
                     >
                         Selanjutnya
                         <FiChevronRight />

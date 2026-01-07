@@ -4,19 +4,18 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import {
     Box,
-    Heading,
-    Text,
     VStack,
-    Card,
     Button,
     Input,
     Field,
     HStack,
     Avatar,
     Badge,
+    Text,
 } from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
-import { FiSave } from "react-icons/fi";
+import { FiSave, FiUser, FiLock } from "react-icons/fi";
+import { PageHeader, Card } from "@/components/ui/shared";
 
 interface Profile {
     id: string;
@@ -124,52 +123,48 @@ export default function ProfilPage() {
 
     return (
         <Box maxW="600px" mx="auto">
-            <VStack align="start" gap={1} mb={8}>
-                <Heading size="lg">Profil Saya</Heading>
-                <Text color="gray.500">Kelola informasi akun Anda</Text>
-            </VStack>
+            <PageHeader
+                title="Profil Saya"
+                description="Kelola informasi akun Anda"
+            />
 
-            <Card.Root mb={6}>
-                <Card.Header>
-                    <HStack gap={4}>
-                        <Avatar.Root size="lg" bg="blue.500">
-                            <Avatar.Fallback>{(profile?.nama || "U").substring(0, 2).toUpperCase()}</Avatar.Fallback>
-                        </Avatar.Root>
-                        <VStack align="start" gap={1}>
-                            <Text fontWeight="bold" fontSize="lg">{profile?.nama}</Text>
-                            <Text color="gray.500" fontSize="sm">{profile?.email}</Text>
-                            <HStack>
-                                <Badge colorPalette="blue">{profile?.role}</Badge>
-                                {profile?.unitKerja && (
-                                    <Badge colorPalette="green">{profile.unitKerja.nama}</Badge>
-                                )}
-                            </HStack>
-                        </VStack>
-                    </HStack>
-                </Card.Header>
-                <Card.Body pt={0}>
-                    <Text fontSize="sm" color="gray.500">
-                        Bergabung sejak{" "}
-                        {new Date(profile?.createdAt || "").toLocaleDateString("id-ID", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                        })}
-                    </Text>
-                </Card.Body>
-            </Card.Root>
+            <Card>
+                <HStack gap={4} mb={4}>
+                    <Avatar.Root size="lg" colorPalette="blue">
+                        <Avatar.Fallback>{(profile?.nama || "U").substring(0, 2).toUpperCase()}</Avatar.Fallback>
+                    </Avatar.Root>
+                    <VStack align="start" gap={1}>
+                        <Text fontWeight="bold" fontSize="lg" color="var(--foreground)">{profile?.nama}</Text>
+                        <Text color="var(--sidebar-text-muted)" fontSize="sm">{profile?.email}</Text>
+                        <HStack>
+                            <Badge colorPalette="blue">{profile?.role}</Badge>
+                            {profile?.unitKerja && (
+                                <Badge colorPalette="green">{profile.unitKerja.nama}</Badge>
+                            )}
+                        </HStack>
+                    </VStack>
+                </HStack>
+                <Text fontSize="sm" color="var(--sidebar-text-muted)">
+                    Bergabung sejak{" "}
+                    {new Date(profile?.createdAt || "").toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                    })}
+                </Text>
+            </Card>
 
-            <Card.Root mb={6}>
-                <Card.Header>
-                    <Text fontWeight="semibold">Ubah Nama</Text>
-                </Card.Header>
-                <Card.Body pt={0}>
-                    <HStack>
-                        <Field.Root>
+            <Box mt={4}>
+                <Card title="Ubah Nama">
+                    <HStack flexWrap={{ base: "wrap", md: "nowrap" }} gap={3}>
+                        <Field.Root flex={1}>
                             <Input
                                 value={nama}
                                 onChange={(e) => setNama(e.target.value)}
                                 placeholder="Nama lengkap"
+                                bg="var(--input-bg)"
+                                borderColor="var(--input-border)"
+                                color="var(--foreground)"
                             />
                         </Field.Root>
                         <Button
@@ -181,40 +176,46 @@ export default function ProfilPage() {
                             Simpan
                         </Button>
                     </HStack>
-                </Card.Body>
-            </Card.Root>
+                </Card>
+            </Box>
 
-            <Card.Root>
-                <Card.Header>
-                    <Text fontWeight="semibold">Ubah Password</Text>
-                </Card.Header>
-                <Card.Body pt={0}>
+            <Box mt={4}>
+                <Card title="Ubah Password">
                     <VStack gap={4}>
-                        <Field.Root>
-                            <Field.Label fontSize="sm">Password Saat Ini</Field.Label>
+                        <Field.Root w="full">
+                            <Field.Label fontSize="sm" color="var(--foreground)">Password Saat Ini</Field.Label>
                             <Input
                                 type="password"
                                 value={currentPassword}
                                 onChange={(e) => setCurrentPassword(e.target.value)}
                                 placeholder="••••••••"
+                                bg="var(--input-bg)"
+                                borderColor="var(--input-border)"
+                                color="var(--foreground)"
                             />
                         </Field.Root>
-                        <Field.Root>
-                            <Field.Label fontSize="sm">Password Baru</Field.Label>
+                        <Field.Root w="full">
+                            <Field.Label fontSize="sm" color="var(--foreground)">Password Baru</Field.Label>
                             <Input
                                 type="password"
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 placeholder="••••••••"
+                                bg="var(--input-bg)"
+                                borderColor="var(--input-border)"
+                                color="var(--foreground)"
                             />
                         </Field.Root>
-                        <Field.Root>
-                            <Field.Label fontSize="sm">Konfirmasi Password Baru</Field.Label>
+                        <Field.Root w="full">
+                            <Field.Label fontSize="sm" color="var(--foreground)">Konfirmasi Password Baru</Field.Label>
                             <Input
                                 type="password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="••••••••"
+                                bg="var(--input-bg)"
+                                borderColor="var(--input-border)"
+                                color="var(--foreground)"
                             />
                         </Field.Root>
                         <Button
@@ -224,11 +225,12 @@ export default function ProfilPage() {
                             loading={saving}
                             disabled={!currentPassword || !newPassword || !confirmPassword}
                         >
+                            <FiLock />
                             Ubah Password
                         </Button>
                     </VStack>
-                </Card.Body>
-            </Card.Root>
+                </Card>
+            </Box>
         </Box>
     );
 }

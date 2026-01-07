@@ -2,12 +2,8 @@
 
 import { useState, useEffect } from "react";
 import {
-    Box,
-    Heading,
-    Text,
     VStack,
     HStack,
-    Card,
     Button,
     Input,
     Table,
@@ -16,10 +12,20 @@ import {
     Dialog,
     Field,
     IconButton,
-    Group,
+    Text,
+    Box,
 } from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
-import { FiPlus, FiEdit, FiKey, FiUserX, FiUserCheck, FiSearch } from "react-icons/fi";
+import { FiPlus, FiEdit, FiKey, FiUserX, FiUserCheck, FiUsers } from "react-icons/fi";
+import {
+    PageHeader,
+    Card,
+    SearchInput,
+    PrimaryButton,
+    StatusBadge,
+    TableLoadingRow,
+    TableEmptyRow,
+} from "@/components/ui/shared";
 
 interface User {
     id: string;
@@ -142,128 +148,138 @@ export default function AdminUsersPage() {
     );
 
     return (
-        <Box>
-            <HStack justify="space-between" mb={8}>
-                <VStack align="start" gap={1}>
-                    <Heading size="lg">Manajemen User</Heading>
-                    <Text color="gray.500">Kelola akun pengguna sistem</Text>
-                </VStack>
-                <Button colorPalette="blue" onClick={() => setIsOpen(true)}>
-                    <FiPlus />
+        <>
+            <PageHeader
+                title="Manajemen User"
+                description="Kelola akun pengguna sistem"
+            >
+                <PrimaryButton icon={FiPlus} onClick={() => setIsOpen(true)}>
                     Tambah User
-                </Button>
-            </HStack>
+                </PrimaryButton>
+            </PageHeader>
 
-            <Card.Root mb={6}>
-                <Card.Body>
-                    <Group>
-                        <FiSearch />
-                        <Input placeholder="Cari user..." value={search} onChange={(e) => setSearch(e.target.value)} />
-                    </Group>
-                </Card.Body>
-            </Card.Root>
+            <Card>
+                <Box mb={4}>
+                    <SearchInput
+                        value={search}
+                        onChange={setSearch}
+                        placeholder="Cari user..."
+                    />
+                </Box>
 
-            <Card.Root>
-                <Card.Body p={0}>
-                    <Table.Root>
+                <Box overflowX="auto" mx={-5} mb={-5}>
+                    <Table.Root size="sm">
                         <Table.Header>
-                            <Table.Row bg="gray.50">
-                                <Table.ColumnHeader>User</Table.ColumnHeader>
-                                <Table.ColumnHeader>Role</Table.ColumnHeader>
-                                <Table.ColumnHeader>Unit Kerja</Table.ColumnHeader>
-                                <Table.ColumnHeader>Status</Table.ColumnHeader>
-                                <Table.ColumnHeader>Aksi</Table.ColumnHeader>
+                            <Table.Row bg="var(--table-header-bg)">
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider">User</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider">Role</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider">Unit Kerja</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider">Status</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider">Aksi</Table.ColumnHeader>
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
-                            {filtered.map((user) => (
-                                <Table.Row key={user.id} opacity={user.isActive ? 1 : 0.5}>
-                                    <Table.Cell>
-                                        <VStack align="start" gap={0}>
-                                            <Text fontWeight="medium">{user.nama}</Text>
-                                            <Text fontSize="sm" color="gray.500">{user.email}</Text>
-                                        </VStack>
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        <Badge colorPalette={ROLES.find(r => r.value === user.role)?.color}>
-                                            {ROLES.find(r => r.value === user.role)?.label}
-                                        </Badge>
-                                    </Table.Cell>
-                                    <Table.Cell>{user.unitKerja?.nama || "-"}</Table.Cell>
-                                    <Table.Cell>
-                                        <Badge colorPalette={user.isActive ? "green" : "gray"}>
-                                            {user.isActive ? "Aktif" : "Nonaktif"}
-                                        </Badge>
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        <HStack>
-                                            <IconButton aria-label="Edit" size="sm" onClick={() => handleEdit(user)}>
-                                                <FiEdit />
-                                            </IconButton>
-                                            <IconButton
-                                                aria-label="Reset Password"
-                                                size="sm"
-                                                onClick={() => { setSelectedUserId(user.id); setIsPwOpen(true); }}
-                                            >
-                                                <FiKey />
-                                            </IconButton>
-                                            <IconButton
-                                                aria-label="Toggle Active"
-                                                size="sm"
-                                                colorPalette={user.isActive ? "red" : "green"}
-                                                variant="ghost"
-                                                onClick={() => handleToggleActive(user)}
-                                            >
-                                                {user.isActive ? <FiUserX /> : <FiUserCheck />}
-                                            </IconButton>
-                                        </HStack>
-                                    </Table.Cell>
-                                </Table.Row>
-                            ))}
+                            {loading ? (
+                                <TableLoadingRow colSpan={5} />
+                            ) : filtered.length === 0 ? (
+                                <TableEmptyRow
+                                    colSpan={5}
+                                    message="Tidak ada user ditemukan"
+                                    description="Coba ubah filter atau kata kunci pencarian"
+                                />
+                            ) : (
+                                filtered.map((user) => (
+                                    <Table.Row key={user.id} opacity={user.isActive ? 1 : 0.5} _hover={{ bg: "var(--table-row-hover)" }}>
+                                        <Table.Cell px={5} py={3}>
+                                            <VStack align="start" gap={0}>
+                                                <Text fontWeight="medium" color="var(--foreground)">{user.nama}</Text>
+                                                <Text fontSize="sm" color="var(--sidebar-text-muted)">{user.email}</Text>
+                                            </VStack>
+                                        </Table.Cell>
+                                        <Table.Cell px={5} py={3}>
+                                            <StatusBadge
+                                                status={ROLES.find(r => r.value === user.role)?.label || user.role}
+                                                colorScheme={ROLES.find(r => r.value === user.role)?.color as "red" | "orange" | "blue" || "gray"}
+                                            />
+                                        </Table.Cell>
+                                        <Table.Cell px={5} py={3} color="var(--foreground)">{user.unitKerja?.nama || "-"}</Table.Cell>
+                                        <Table.Cell px={5} py={3}>
+                                            <StatusBadge
+                                                status={user.isActive ? "Aktif" : "Nonaktif"}
+                                                colorScheme={user.isActive ? "green" : "gray"}
+                                            />
+                                        </Table.Cell>
+                                        <Table.Cell px={5} py={3}>
+                                            <HStack>
+                                                <IconButton aria-label="Edit" size="xs" variant="ghost" onClick={() => handleEdit(user)}>
+                                                    <FiEdit />
+                                                </IconButton>
+                                                <IconButton
+                                                    aria-label="Reset Password"
+                                                    size="xs"
+                                                    variant="ghost"
+                                                    onClick={() => { setSelectedUserId(user.id); setIsPwOpen(true); }}
+                                                >
+                                                    <FiKey />
+                                                </IconButton>
+                                                <IconButton
+                                                    aria-label="Toggle Active"
+                                                    size="xs"
+                                                    colorPalette={user.isActive ? "red" : "green"}
+                                                    variant="ghost"
+                                                    onClick={() => handleToggleActive(user)}
+                                                >
+                                                    {user.isActive ? <FiUserX /> : <FiUserCheck />}
+                                                </IconButton>
+                                            </HStack>
+                                        </Table.Cell>
+                                    </Table.Row>
+                                ))
+                            )}
                         </Table.Body>
                     </Table.Root>
-                </Card.Body>
-            </Card.Root>
+                </Box>
+            </Card>
 
             {/* Add/Edit Dialog */}
             <Dialog.Root open={isOpen} onOpenChange={(e) => { if (!e.open) resetForm(); }}>
-                <Dialog.Backdrop />
+                <Dialog.Backdrop bg="blackAlpha.600" />
                 <Dialog.Positioner>
-                    <Dialog.Content>
-                        <Dialog.Header>
-                            <Dialog.Title>{editingUser ? "Edit User" : "Tambah User"}</Dialog.Title>
+                    <Dialog.Content bg="var(--card-bg)" borderColor="var(--card-border)">
+                        <Dialog.Header borderBottom="1px solid" borderColor="var(--card-border)">
+                            <Dialog.Title color="var(--foreground)">{editingUser ? "Edit User" : "Tambah User"}</Dialog.Title>
                             <Dialog.CloseTrigger />
                         </Dialog.Header>
-                        <Dialog.Body>
+                        <Dialog.Body py={5}>
                             <VStack gap={4}>
                                 {!editingUser && (
                                     <>
                                         <Field.Root required>
-                                            <Field.Label>Email</Field.Label>
-                                            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                            <Field.Label color="var(--foreground)">Email</Field.Label>
+                                            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} bg="var(--input-bg)" borderColor="var(--input-border)" color="var(--foreground)" />
                                         </Field.Root>
                                         <Field.Root required>
-                                            <Field.Label>Password</Field.Label>
-                                            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                                            <Field.Label color="var(--foreground)">Password</Field.Label>
+                                            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} bg="var(--input-bg)" borderColor="var(--input-border)" color="var(--foreground)" />
                                         </Field.Root>
                                     </>
                                 )}
                                 <Field.Root required>
-                                    <Field.Label>Nama</Field.Label>
-                                    <Input value={nama} onChange={(e) => setNama(e.target.value)} />
+                                    <Field.Label color="var(--foreground)">Nama</Field.Label>
+                                    <Input value={nama} onChange={(e) => setNama(e.target.value)} bg="var(--input-bg)" borderColor="var(--input-border)" color="var(--foreground)" />
                                 </Field.Root>
                                 <Field.Root required>
-                                    <Field.Label>Role</Field.Label>
+                                    <Field.Label color="var(--foreground)">Role</Field.Label>
                                     <NativeSelect.Root>
-                                        <NativeSelect.Field value={role} onChange={(e) => setRole(e.target.value)}>
+                                        <NativeSelect.Field value={role} onChange={(e) => setRole(e.target.value)} bg="var(--input-bg)" borderColor="var(--input-border)" color="var(--foreground)">
                                             {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
                                         </NativeSelect.Field>
                                     </NativeSelect.Root>
                                 </Field.Root>
                                 <Field.Root>
-                                    <Field.Label>Unit Kerja</Field.Label>
+                                    <Field.Label color="var(--foreground)">Unit Kerja</Field.Label>
                                     <NativeSelect.Root>
-                                        <NativeSelect.Field value={unitKerjaId} onChange={(e) => setUnitKerjaId(e.target.value)}>
+                                        <NativeSelect.Field value={unitKerjaId} onChange={(e) => setUnitKerjaId(e.target.value)} bg="var(--input-bg)" borderColor="var(--input-border)" color="var(--foreground)">
                                             <option value="">Tidak ada</option>
                                             {unitKerjaList.map(u => <option key={u.id} value={u.id}>{u.nama}</option>)}
                                         </NativeSelect.Field>
@@ -271,7 +287,7 @@ export default function AdminUsersPage() {
                                 </Field.Root>
                             </VStack>
                         </Dialog.Body>
-                        <Dialog.Footer>
+                        <Dialog.Footer borderTop="1px solid" borderColor="var(--card-border)">
                             <Button variant="ghost" mr={3} onClick={resetForm}>Batal</Button>
                             <Button colorPalette="blue" onClick={handleSubmit}>Simpan</Button>
                         </Dialog.Footer>
@@ -281,26 +297,26 @@ export default function AdminUsersPage() {
 
             {/* Reset Password Dialog */}
             <Dialog.Root open={isPwOpen} onOpenChange={(e) => setIsPwOpen(e.open)}>
-                <Dialog.Backdrop />
+                <Dialog.Backdrop bg="blackAlpha.600" />
                 <Dialog.Positioner>
-                    <Dialog.Content>
-                        <Dialog.Header>
-                            <Dialog.Title>Reset Password</Dialog.Title>
+                    <Dialog.Content bg="var(--card-bg)" borderColor="var(--card-border)">
+                        <Dialog.Header borderBottom="1px solid" borderColor="var(--card-border)">
+                            <Dialog.Title color="var(--foreground)">Reset Password</Dialog.Title>
                             <Dialog.CloseTrigger />
                         </Dialog.Header>
-                        <Dialog.Body>
+                        <Dialog.Body py={5}>
                             <Field.Root>
-                                <Field.Label>Password Baru</Field.Label>
-                                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                                <Field.Label color="var(--foreground)">Password Baru</Field.Label>
+                                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} bg="var(--input-bg)" borderColor="var(--input-border)" color="var(--foreground)" />
                             </Field.Root>
                         </Dialog.Body>
-                        <Dialog.Footer>
+                        <Dialog.Footer borderTop="1px solid" borderColor="var(--card-border)">
                             <Button variant="ghost" mr={3} onClick={() => setIsPwOpen(false)}>Batal</Button>
                             <Button colorPalette="blue" onClick={handleResetPassword} disabled={!newPassword}>Reset</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>
             </Dialog.Root>
-        </Box>
+        </>
     );
 }

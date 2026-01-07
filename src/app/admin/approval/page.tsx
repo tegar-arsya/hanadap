@@ -3,11 +3,9 @@
 import { useState, useEffect } from "react";
 import {
     Box,
-    Heading,
     Text,
     VStack,
     HStack,
-    Card,
     Button,
     NativeSelect,
     Input,
@@ -18,6 +16,7 @@ import {
 } from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
 import { FiPlus, FiTrash2, FiArrowDown, FiCheck } from "react-icons/fi";
+import { PageHeader, Card, PrimaryButton, StyledInput } from "@/components/ui/shared";
 
 interface ApprovalLevel {
     id: string;
@@ -73,109 +72,154 @@ export default function AdminApprovalPage() {
 
     return (
         <Box>
-            <HStack justify="space-between" mb={8}>
-                <VStack align="start" gap={1}>
-                    <Heading size="lg">Konfigurasi Approval</Heading>
-                    <Text color="gray.500">Atur level persetujuan permintaan</Text>
-                </VStack>
-                <Button colorPalette="blue" onClick={() => setIsOpen(true)}>
+            <HStack justify="space-between" mb={8} flexWrap="wrap" gap={4}>
+                <PageHeader title="Konfigurasi Approval" subtitle="Atur level persetujuan permintaan" />
+                <PrimaryButton onClick={() => setIsOpen(true)}>
                     <FiPlus />
                     Tambah Level
-                </Button>
+                </PrimaryButton>
             </HStack>
 
-            <Card.Root>
-                <Card.Body>
-                    <Text fontWeight="semibold" mb={4}>Alur Persetujuan</Text>
+            <Card>
+                <Text fontWeight="semibold" mb={4} style={{ color: "var(--foreground)" }}>Alur Persetujuan</Text>
 
-                    {levels.length === 0 ? (
-                        <VStack py={10} gap={2}>
-                            <Text color="gray.500">Belum ada konfigurasi approval.</Text>
-                            <Text fontSize="sm" color="gray.400">Jika kosong, approval langsung oleh Admin.</Text>
-                        </VStack>
-                    ) : (
-                        <VStack gap={0} align="center">
-                            <Box bg="green.100" color="green.700" px={6} py={2} borderRadius="full" fontWeight="medium">
-                                📝 Request Dibuat
-                            </Box>
+                {levels.length === 0 ? (
+                    <VStack py={10} gap={2}>
+                        <Text style={{ color: "var(--muted-foreground)" }}>Belum ada konfigurasi approval.</Text>
+                        <Text fontSize="sm" style={{ color: "var(--muted-foreground)" }}>Jika kosong, approval langsung oleh Admin.</Text>
+                    </VStack>
+                ) : (
+                    <VStack gap={0} align="center">
+                        <Box
+                            px={6}
+                            py={2}
+                            borderRadius="full"
+                            fontWeight="medium"
+                            style={{
+                                background: "var(--stat-green-bg)",
+                                color: "var(--stat-green-color)",
+                            }}
+                        >
+                            📝 Request Dibuat
+                        </Box>
 
-                            {levels.sort((a, b) => a.level - b.level).map((level) => (
-                                <VStack key={level.id} gap={0}>
-                                    <Box my={2} color="gray.300">
-                                        <FiArrowDown size={24} />
-                                    </Box>
-                                    <Card.Root borderWidth={2} borderColor="blue.200" bg="blue.50">
-                                        <Card.Body py={3} px={4}>
-                                            <HStack justify="space-between">
-                                                <VStack align="start" gap={0}>
-                                                    <HStack>
-                                                        <Text fontSize="xs" color="blue.500" fontWeight="bold">LEVEL {level.level}</Text>
-                                                        <Text fontWeight="semibold">{level.nama}</Text>
-                                                    </HStack>
-                                                    <Text fontSize="sm" color="gray.500">
-                                                        Role: {ROLES.find((r) => r.value === level.roleRequired)?.label}
-                                                    </Text>
-                                                </VStack>
-                                                <IconButton
-                                                    aria-label="Delete"
-                                                    size="sm"
-                                                    colorPalette="red"
-                                                    variant="ghost"
-                                                    onClick={() => handleDelete(level.id)}
-                                                >
-                                                    <FiTrash2 />
-                                                </IconButton>
+                        {levels.sort((a, b) => a.level - b.level).map((level) => (
+                            <VStack key={level.id} gap={0}>
+                                <Box my={2} style={{ color: "var(--muted-foreground)" }}>
+                                    <FiArrowDown size={24} />
+                                </Box>
+                                <Box
+                                    borderRadius="xl"
+                                    padding="1rem"
+                                    style={{
+                                        background: "var(--stat-blue-bg)",
+                                        border: "2px solid var(--stat-blue-color)",
+                                    }}
+                                >
+                                    <HStack justify="space-between" gap={4}>
+                                        <VStack align="start" gap={0}>
+                                            <HStack>
+                                                <Text fontSize="xs" fontWeight="bold" style={{ color: "var(--stat-blue-color)" }}>
+                                                    LEVEL {level.level}
+                                                </Text>
+                                                <Text fontWeight="semibold" style={{ color: "var(--foreground)" }}>{level.nama}</Text>
                                             </HStack>
-                                        </Card.Body>
-                                    </Card.Root>
-                                </VStack>
-                            ))}
+                                            <Text fontSize="sm" style={{ color: "var(--muted-foreground)" }}>
+                                                Role: {ROLES.find((r) => r.value === level.roleRequired)?.label}
+                                            </Text>
+                                        </VStack>
+                                        <IconButton
+                                            aria-label="Delete"
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => handleDelete(level.id)}
+                                            style={{ color: "var(--stat-red-color)" }}
+                                        >
+                                            <FiTrash2 />
+                                        </IconButton>
+                                    </HStack>
+                                </Box>
+                            </VStack>
+                        ))}
 
-                            <Box my={2} color="gray.300">
-                                <FiArrowDown size={24} />
-                            </Box>
-                            <Box bg="green.100" color="green.700" px={6} py={2} borderRadius="full" fontWeight="medium">
-                                <HStack><FiCheck /><Text>Disetujui & Stok Dikurangi</Text></HStack>
-                            </Box>
-                        </VStack>
-                    )}
-                </Card.Body>
-            </Card.Root>
+                        <Box my={2} style={{ color: "var(--muted-foreground)" }}>
+                            <FiArrowDown size={24} />
+                        </Box>
+                        <Box
+                            px={6}
+                            py={2}
+                            borderRadius="full"
+                            fontWeight="medium"
+                            style={{
+                                background: "var(--stat-green-bg)",
+                                color: "var(--stat-green-color)",
+                            }}
+                        >
+                            <HStack><FiCheck /><Text>Disetujui & Stok Dikurangi</Text></HStack>
+                        </Box>
+                    </VStack>
+                )}
+            </Card>
 
             <Dialog.Root open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>
-                    <Dialog.Content>
-                        <Dialog.Header>
-                            <Dialog.Title>Tambah Level Approval</Dialog.Title>
+                    <Dialog.Content style={{ background: "var(--card-bg)", borderColor: "var(--card-border)" }}>
+                        <Dialog.Header style={{ borderColor: "var(--card-border)" }}>
+                            <Dialog.Title style={{ color: "var(--foreground)" }}>Tambah Level Approval</Dialog.Title>
                             <Dialog.CloseTrigger />
                         </Dialog.Header>
                         <Dialog.Body>
                             <VStack gap={4}>
                                 <Field.Root required>
-                                    <Field.Label>Level</Field.Label>
+                                    <Field.Label style={{ color: "var(--foreground)" }}>Level</Field.Label>
                                     <NumberInput.Root value={levelNum} onValueChange={(e) => setLevelNum(e.value)} min={1}>
-                                        <NumberInput.Input />
+                                        <NumberInput.Input
+                                            style={{
+                                                background: "var(--input-bg)",
+                                                borderColor: "var(--input-border)",
+                                                color: "var(--foreground)",
+                                            }}
+                                        />
                                     </NumberInput.Root>
                                 </Field.Root>
                                 <Field.Root required>
-                                    <Field.Label>Nama Level</Field.Label>
-                                    <Input value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Kepala Unit, Admin Gudang..." />
+                                    <Field.Label style={{ color: "var(--foreground)" }}>Nama Level</Field.Label>
+                                    <StyledInput value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Kepala Unit, Admin Gudang..." />
                                 </Field.Root>
                                 <Field.Root required>
-                                    <Field.Label>Role yang Bisa Approve</Field.Label>
+                                    <Field.Label style={{ color: "var(--foreground)" }}>Role yang Bisa Approve</Field.Label>
                                     <NativeSelect.Root>
-                                        <NativeSelect.Field value={roleRequired} onChange={(e) => setRoleRequired(e.target.value)}>
-                                            <option value="">Pilih Role</option>
-                                            {ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                                        <NativeSelect.Field
+                                            value={roleRequired}
+                                            onChange={(e) => setRoleRequired(e.target.value)}
+                                            style={{
+                                                background: "var(--input-bg)",
+                                                borderColor: "var(--input-border)",
+                                                color: "var(--foreground)",
+                                            }}
+                                        >
+                                            <option value="" style={{ background: "var(--card-bg)" }}>Pilih Role</option>
+                                            {ROLES.map((r) => (
+                                                <option key={r.value} value={r.value} style={{ background: "var(--card-bg)" }}>
+                                                    {r.label}
+                                                </option>
+                                            ))}
                                         </NativeSelect.Field>
                                     </NativeSelect.Root>
                                 </Field.Root>
                             </VStack>
                         </Dialog.Body>
-                        <Dialog.Footer>
-                            <Button variant="ghost" mr={3} onClick={() => setIsOpen(false)}>Batal</Button>
-                            <Button colorPalette="blue" onClick={handleAdd}>Simpan</Button>
+                        <Dialog.Footer style={{ borderColor: "var(--card-border)" }}>
+                            <Button
+                                variant="ghost"
+                                mr={3}
+                                onClick={() => setIsOpen(false)}
+                                style={{ color: "var(--foreground)" }}
+                            >
+                                Batal
+                            </Button>
+                            <PrimaryButton onClick={handleAdd}>Simpan</PrimaryButton>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>

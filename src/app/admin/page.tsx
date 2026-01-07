@@ -1,15 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import {
-    Box,
-    Heading,
-    Text,
-    SimpleGrid,
-    Card,
-    Stat,
-    HStack,
-    VStack,
-} from "@chakra-ui/react";
 import { FiPackage, FiLayers, FiClock, FiCheck } from "react-icons/fi";
+import { PageHeader, StatCard, StatGrid } from "@/components/ui/shared";
 
 export default async function AdminDashboard() {
     const [totalBarang, totalStok, pendingRequests, approvedRequests] =
@@ -20,74 +11,43 @@ export default async function AdminDashboard() {
             prisma.request.count({ where: { status: "APPROVED" } }),
         ]);
 
-    const stats = [
-        {
-            label: "Total Barang",
-            value: totalBarang,
-            icon: FiPackage,
-            color: "blue",
-            help: "Jenis barang terdaftar",
-        },
-        {
-            label: "Total Stok",
-            value: totalStok._sum.stokTotal || 0,
-            icon: FiLayers,
-            color: "green",
-            help: "Unit tersedia",
-        },
-        {
-            label: "Request Pending",
-            value: pendingRequests,
-            icon: FiClock,
-            color: "orange",
-            help: "Menunggu persetujuan",
-        },
-        {
-            label: "Request Disetujui",
-            value: approvedRequests,
-            icon: FiCheck,
-            color: "teal",
-            help: "Total disetujui",
-        },
-    ];
-
     return (
-        <Box>
-            <VStack align="start" gap={1} mb={8}>
-                <Heading size="lg">Dashboard Admin</Heading>
-                <Text color="gray.500">Selamat datang di Hanadap Inventory System</Text>
-            </VStack>
+        <>
+            <PageHeader
+                title="Dashboard Admin"
+                description="Selamat datang di Hanadap Inventory System"
+            />
 
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6}>
-                {stats.map((stat) => {
-                    const IconComponent = stat.icon;
-                    return (
-                        <Card.Root key={stat.label}>
-                            <Card.Body>
-                                <HStack gap={4}>
-                                    <Box
-                                        p={3}
-                                        borderRadius="lg"
-                                        bg={`${stat.color}.50`}
-                                        color={`${stat.color}.500`}
-                                    >
-                                        <IconComponent size={24} />
-                                    </Box>
-                                    <Stat.Root>
-                                        <Stat.Label color="gray.500" fontSize="sm">
-                                            {stat.label}
-                                        </Stat.Label>
-                                        <Stat.ValueText fontSize="2xl">{stat.value}</Stat.ValueText>
-                                        <Stat.HelpText mb={0} fontSize="xs">
-                                            {stat.help}
-                                        </Stat.HelpText>
-                                    </Stat.Root>
-                                </HStack>
-                            </Card.Body>
-                        </Card.Root>
-                    );
-                })}
-            </SimpleGrid>
-        </Box>
+            <StatGrid>
+                <StatCard
+                    label="Total Barang"
+                    value={totalBarang}
+                    icon={<FiPackage size={24} />}
+                    colorScheme="blue"
+                    helpText="Jenis barang terdaftar"
+                />
+                <StatCard
+                    label="Total Stok"
+                    value={totalStok._sum.stokTotal || 0}
+                    icon={<FiLayers size={24} />}
+                    colorScheme="green"
+                    helpText="Unit tersedia"
+                />
+                <StatCard
+                    label="Request Pending"
+                    value={pendingRequests}
+                    icon={<FiClock size={24} />}
+                    colorScheme="orange"
+                    helpText="Menunggu persetujuan"
+                />
+                <StatCard
+                    label="Request Disetujui"
+                    value={approvedRequests}
+                    icon={<FiCheck size={24} />}
+                    colorScheme="teal"
+                    helpText="Total disetujui"
+                />
+            </StatGrid>
+        </>
     );
 }

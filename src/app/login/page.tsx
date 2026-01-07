@@ -13,10 +13,9 @@ import {
     Text,
     VStack,
     Alert,
-    Card,
-    Group,
+    HStack,
 } from "@chakra-ui/react";
-import { FiMail, FiLock } from "react-icons/fi";
+import { FiMail, FiLock, FiLogIn } from "react-icons/fi";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -51,78 +50,148 @@ export default function LoginPage() {
     };
 
     return (
-        <Box minH="100vh" bgGradient="to-br" gradientFrom="blue.500" gradientTo="blue.700" py={20}>
-            <Container maxW="md">
+        <Box
+            minH="100vh"
+            display="flex"
+            alignItems="center"
+            justifyContent="center"
+            bg="var(--background)"
+            p={4}
+        >
+            <Container maxW="sm">
                 <VStack gap={8}>
+                    {/* Logo Section */}
                     <VStack gap={2} textAlign="center">
-                        <Heading color="white" size="2xl" fontWeight="bold">
+                        <Box
+                            w={16}
+                            h={16}
+                            borderRadius="2xl"
+                            bg="var(--active-color-admin)"
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="center"
+                            mb={2}
+                        >
+                            <Text fontSize="2xl" fontWeight="bold" color="white">
+                                H
+                            </Text>
+                        </Box>
+                        <Heading color="var(--foreground)" size="xl" fontWeight="bold">
                             Hanadap
                         </Heading>
-                        <Text color="whiteAlpha.800" fontSize="lg">
+                        <Text color="var(--sidebar-text-muted)" fontSize="md">
                             Sistem Inventori FIFO
                         </Text>
                     </VStack>
 
-                    <Card.Root w="full" shadow="2xl" borderRadius="2xl">
-                        <Card.Body p={8}>
-                            <form onSubmit={handleSubmit}>
-                                <VStack gap={5}>
-                                    <Heading size="md" color="gray.700">
-                                        Login
+                    {/* Login Card */}
+                    <Box
+                        w="full"
+                        bg="var(--card-bg)"
+                        borderRadius="2xl"
+                        border="1px solid"
+                        borderColor="var(--card-border)"
+                        boxShadow="var(--card-shadow)"
+                        p={8}
+                    >
+                        <form onSubmit={handleSubmit}>
+                            <VStack gap={5}>
+                                <VStack gap={1} w="full" textAlign="center">
+                                    <Heading size="md" color="var(--foreground)">
+                                        Selamat Datang
                                     </Heading>
-
-                                    {error && (
-                                        <Alert.Root status="error" borderRadius="lg">
-                                            <Alert.Indicator />
-                                            <Alert.Content>{error}</Alert.Content>
-                                        </Alert.Root>
-                                    )}
-
-                                    <Field.Root required>
-                                        <Field.Label color="gray.600">Email</Field.Label>
-                                        <Group w="full">
-                                            <FiMail color="gray" />
-                                            <Input
-                                                type="email"
-                                                value={email}
-                                                onChange={(e) => setEmail(e.target.value)}
-                                                placeholder="email@example.com"
-                                                size="lg"
-                                                borderRadius="lg"
-                                            />
-                                        </Group>
-                                    </Field.Root>
-
-                                    <Field.Root required>
-                                        <Field.Label color="gray.600">Password</Field.Label>
-                                        <Group w="full">
-                                            <FiLock color="gray" />
-                                            <Input
-                                                type="password"
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                placeholder="••••••••"
-                                                size="lg"
-                                                borderRadius="lg"
-                                            />
-                                        </Group>
-                                    </Field.Root>
-
-                                    <Button
-                                        type="submit"
-                                        colorPalette="blue"
-                                        size="lg"
-                                        w="full"
-                                        loading={loading}
-                                        loadingText="Masuk..."
-                                        borderRadius="lg"
-                                    >
-                                        Masuk
-                                    </Button>
+                                    <Text fontSize="sm" color="var(--sidebar-text-muted)">
+                                        Masuk ke akun Anda
+                                    </Text>
                                 </VStack>
-                            </form>
-                        </Card.Body>
-                    </Card.Root>
+
+                                {error && (
+                                    <Alert.Root status="error" borderRadius="lg" bg="var(--stat-red-bg)">
+                                        <Alert.Indicator color="var(--stat-red-color)" />
+                                        <Alert.Content color="var(--stat-red-color)">{error}</Alert.Content>
+                                    </Alert.Root>
+                                )}
+
+                                <Field.Root required w="full">
+                                    <Field.Label color="var(--foreground)" fontSize="sm" fontWeight="medium">
+                                        Email
+                                    </Field.Label>
+                                    <HStack
+                                        w="full"
+                                        bg="var(--input-bg)"
+                                        border="1px solid"
+                                        borderColor="var(--input-border)"
+                                        borderRadius="lg"
+                                        px={3}
+                                        _focusWithin={{
+                                            borderColor: "var(--input-focus-border)",
+                                            boxShadow: "0 0 0 1px var(--input-focus-border)",
+                                        }}
+                                    >
+                                        <FiMail color="var(--sidebar-text-muted)" />
+                                        <Input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            placeholder="email@example.com"
+                                            variant="unstyled"
+                                            py={3}
+                                            color="var(--foreground)"
+                                            _placeholder={{ color: "var(--sidebar-text-muted)" }}
+                                        />
+                                    </HStack>
+                                </Field.Root>
+
+                                <Field.Root required w="full">
+                                    <Field.Label color="var(--foreground)" fontSize="sm" fontWeight="medium">
+                                        Password
+                                    </Field.Label>
+                                    <HStack
+                                        w="full"
+                                        bg="var(--input-bg)"
+                                        border="1px solid"
+                                        borderColor="var(--input-border)"
+                                        borderRadius="lg"
+                                        px={3}
+                                        _focusWithin={{
+                                            borderColor: "var(--input-focus-border)",
+                                            boxShadow: "0 0 0 1px var(--input-focus-border)",
+                                        }}
+                                    >
+                                        <FiLock color="var(--sidebar-text-muted)" />
+                                        <Input
+                                            type="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            placeholder="••••••••"
+                                            variant="unstyled"
+                                            py={3}
+                                            color="var(--foreground)"
+                                            _placeholder={{ color: "var(--sidebar-text-muted)" }}
+                                        />
+                                    </HStack>
+                                </Field.Root>
+
+                                <Button
+                                    type="submit"
+                                    colorPalette="blue"
+                                    size="lg"
+                                    w="full"
+                                    loading={loading}
+                                    loadingText="Masuk..."
+                                    borderRadius="lg"
+                                    fontWeight="medium"
+                                >
+                                    <FiLogIn />
+                                    Masuk
+                                </Button>
+                            </VStack>
+                        </form>
+                    </Box>
+
+                    <Text fontSize="sm" color="var(--sidebar-text-muted)">
+                        © 2026 Hanadap. All rights reserved.
+                    </Text>
                 </VStack>
             </Container>
         </Box>

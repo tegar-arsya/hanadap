@@ -2,24 +2,28 @@
 
 import { useState, useEffect } from "react";
 import {
-    Box,
-    Heading,
-    Text,
     VStack,
     HStack,
     Button,
     Input,
-    Card,
     Table,
     Badge,
     IconButton,
     Dialog,
     Field,
-    SimpleGrid,
-    Group,
+    Box,
 } from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
-import { FiPlus, FiTrash2, FiSearch, FiPackage } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiPackage } from "react-icons/fi";
+import {
+    PageHeader,
+    Card,
+    SearchInput,
+    PrimaryButton,
+    StatusBadge,
+    TableLoadingRow,
+    TableEmptyRow,
+} from "@/components/ui/shared";
 
 interface Barang {
     id: string;
@@ -120,127 +124,146 @@ export default function AdminStokPage() {
         (b) => b.nama.toLowerCase().includes(search.toLowerCase())
     );
 
+    const getStatusInfo = (barang: Barang) => {
+        if (barang.stokTotal <= 0) return { label: "Habis", color: "red" as const };
+        if (barang.stokTotal <= barang.stokMinimum) return { label: "Menipis", color: "orange" as const };
+        return { label: "Tersedia", color: "green" as const };
+    };
+
     return (
-        <Box>
-            <HStack justify="space-between" mb={8}>
-                <VStack align="start" gap={1}>
-                    <Heading size="lg">Kelola Stok</Heading>
-                    <Text color="gray.500">Manajemen barang dan stok inventori</Text>
-                </VStack>
-                <Button colorPalette="blue" onClick={() => setIsOpen(true)}>
-                    <FiPlus />
+        <>
+            <PageHeader
+                title="Kelola Stok"
+                description="Manajemen barang dan stok inventori"
+            >
+                <PrimaryButton icon={FiPlus} onClick={() => setIsOpen(true)}>
                     Tambah Barang
-                </Button>
-            </HStack>
+                </PrimaryButton>
+            </PageHeader>
 
-            <Card.Root mb={6}>
-                <Card.Body>
-                    <Group>
-                        <FiSearch />
-                        <Input
-                            placeholder="Cari barang..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </Group>
-                </Card.Body>
-            </Card.Root>
+            <Card>
+                <Box mb={4}>
+                    <SearchInput
+                        value={search}
+                        onChange={setSearch}
+                        placeholder="Cari barang..."
+                    />
+                </Box>
 
-            <Card.Root>
-                <Card.Body p={0}>
-                    <Table.Root>
+                <Box overflowX="auto" mx={-5} mb={-5}>
+                    <Table.Root size="sm">
                         <Table.Header>
-                            <Table.Row bg="gray.50">
-                                <Table.ColumnHeader>Barang</Table.ColumnHeader>
-                                <Table.ColumnHeader>Kategori</Table.ColumnHeader>
-                                <Table.ColumnHeader>Satuan</Table.ColumnHeader>
-                                <Table.ColumnHeader textAlign="right">Stok</Table.ColumnHeader>
-                                <Table.ColumnHeader textAlign="right">Min</Table.ColumnHeader>
-                                <Table.ColumnHeader>Status</Table.ColumnHeader>
-                                <Table.ColumnHeader>Aksi</Table.ColumnHeader>
+                            <Table.Row bg="var(--table-header-bg)">
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider">Barang</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider">Kategori</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider">Satuan</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider" textAlign="right">Stok</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider" textAlign="right">Min</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider">Status</Table.ColumnHeader>
+                                <Table.ColumnHeader px={5} py={3} color="var(--sidebar-text-muted)" fontSize="xs" textTransform="uppercase" letterSpacing="wider">Aksi</Table.ColumnHeader>
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
-                            {filteredBarang.map((barang) => (
-                                <Table.Row key={barang.id}>
-                                    <Table.Cell fontWeight="medium">{barang.nama}</Table.Cell>
-                                    <Table.Cell>{barang.kategori?.nama || "-"}</Table.Cell>
-                                    <Table.Cell>{barang.satuan}</Table.Cell>
-                                    <Table.Cell textAlign="right" fontWeight="semibold">{barang.stokTotal}</Table.Cell>
-                                    <Table.Cell textAlign="right" color="gray.500">{barang.stokMinimum}</Table.Cell>
-                                    <Table.Cell>
-                                        <Badge
-                                            colorPalette={
-                                                barang.stokTotal <= 0
-                                                    ? "red"
-                                                    : barang.stokTotal <= barang.stokMinimum
-                                                        ? "orange"
-                                                        : "green"
-                                            }
-                                        >
-                                            {barang.stokTotal <= 0
-                                                ? "Habis"
-                                                : barang.stokTotal <= barang.stokMinimum
-                                                    ? "Menipis"
-                                                    : "Tersedia"}
-                                        </Badge>
-                                    </Table.Cell>
-                                    <Table.Cell>
-                                        <HStack>
-                                            <Button
-                                                size="sm"
-                                                colorPalette="green"
-                                                onClick={() => {
-                                                    setSelectedBarang(barang);
-                                                    setIsStokOpen(true);
-                                                }}
-                                            >
-                                                + Stok
-                                            </Button>
-                                            <IconButton
-                                                aria-label="Delete"
-                                                size="sm"
-                                                colorPalette="red"
-                                                variant="ghost"
-                                                onClick={() => handleDeleteBarang(barang.id)}
-                                            >
-                                                <FiTrash2 />
-                                            </IconButton>
-                                        </HStack>
-                                    </Table.Cell>
-                                </Table.Row>
-                            ))}
+                            {loading ? (
+                                <TableLoadingRow colSpan={7} />
+                            ) : filteredBarang.length === 0 ? (
+                                <TableEmptyRow
+                                    colSpan={7}
+                                    icon={<FiPackage size={48} />}
+                                    message="Tidak ada barang ditemukan"
+                                    description="Coba ubah kata kunci pencarian"
+                                />
+                            ) : (
+                                filteredBarang.map((barang) => {
+                                    const status = getStatusInfo(barang);
+                                    return (
+                                        <Table.Row key={barang.id} _hover={{ bg: "var(--table-row-hover)" }}>
+                                            <Table.Cell px={5} py={3} fontWeight="medium" color="var(--foreground)">{barang.nama}</Table.Cell>
+                                            <Table.Cell px={5} py={3} color="var(--sidebar-text-muted)">{barang.kategori?.nama || "-"}</Table.Cell>
+                                            <Table.Cell px={5} py={3} color="var(--foreground)">{barang.satuan}</Table.Cell>
+                                            <Table.Cell px={5} py={3} textAlign="right" fontWeight="semibold" color="var(--foreground)">{barang.stokTotal}</Table.Cell>
+                                            <Table.Cell px={5} py={3} textAlign="right" color="var(--sidebar-text-muted)">{barang.stokMinimum}</Table.Cell>
+                                            <Table.Cell px={5} py={3}>
+                                                <StatusBadge status={status.label} colorScheme={status.color} />
+                                            </Table.Cell>
+                                            <Table.Cell px={5} py={3}>
+                                                <HStack>
+                                                    <Button
+                                                        size="xs"
+                                                        colorPalette="green"
+                                                        onClick={() => {
+                                                            setSelectedBarang(barang);
+                                                            setIsStokOpen(true);
+                                                        }}
+                                                    >
+                                                        + Stok
+                                                    </Button>
+                                                    <IconButton
+                                                        aria-label="Delete"
+                                                        size="xs"
+                                                        colorPalette="red"
+                                                        variant="ghost"
+                                                        onClick={() => handleDeleteBarang(barang.id)}
+                                                    >
+                                                        <FiTrash2 />
+                                                    </IconButton>
+                                                </HStack>
+                                            </Table.Cell>
+                                        </Table.Row>
+                                    );
+                                })
+                            )}
                         </Table.Body>
                     </Table.Root>
-                </Card.Body>
-            </Card.Root>
+                </Box>
+            </Card>
 
             {/* Add Barang Dialog */}
             <Dialog.Root open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
-                <Dialog.Backdrop />
+                <Dialog.Backdrop bg="blackAlpha.600" />
                 <Dialog.Positioner>
-                    <Dialog.Content>
-                        <Dialog.Header>
-                            <Dialog.Title>Tambah Barang Baru</Dialog.Title>
+                    <Dialog.Content bg="var(--card-bg)" borderColor="var(--card-border)">
+                        <Dialog.Header borderBottom="1px solid" borderColor="var(--card-border)">
+                            <Dialog.Title color="var(--foreground)">Tambah Barang Baru</Dialog.Title>
                             <Dialog.CloseTrigger />
                         </Dialog.Header>
-                        <Dialog.Body>
+                        <Dialog.Body py={5}>
                             <VStack gap={4}>
                                 <Field.Root required>
-                                    <Field.Label>Nama Barang</Field.Label>
-                                    <Input value={nama} onChange={(e) => setNama(e.target.value)} />
+                                    <Field.Label color="var(--foreground)">Nama Barang</Field.Label>
+                                    <Input
+                                        value={nama}
+                                        onChange={(e) => setNama(e.target.value)}
+                                        bg="var(--input-bg)"
+                                        borderColor="var(--input-border)"
+                                        color="var(--foreground)"
+                                    />
                                 </Field.Root>
                                 <Field.Root required>
-                                    <Field.Label>Satuan</Field.Label>
-                                    <Input value={satuan} onChange={(e) => setSatuan(e.target.value)} placeholder="pcs, rim, botol..." />
+                                    <Field.Label color="var(--foreground)">Satuan</Field.Label>
+                                    <Input
+                                        value={satuan}
+                                        onChange={(e) => setSatuan(e.target.value)}
+                                        placeholder="pcs, rim, botol..."
+                                        bg="var(--input-bg)"
+                                        borderColor="var(--input-border)"
+                                        color="var(--foreground)"
+                                    />
                                 </Field.Root>
                                 <Field.Root>
-                                    <Field.Label>Stok Minimum</Field.Label>
-                                    <Input type="number" value={stokMinimum} onChange={(e) => setStokMinimum(e.target.value)} />
+                                    <Field.Label color="var(--foreground)">Stok Minimum</Field.Label>
+                                    <Input
+                                        type="number"
+                                        value={stokMinimum}
+                                        onChange={(e) => setStokMinimum(e.target.value)}
+                                        bg="var(--input-bg)"
+                                        borderColor="var(--input-border)"
+                                        color="var(--foreground)"
+                                    />
                                 </Field.Root>
                             </VStack>
                         </Dialog.Body>
-                        <Dialog.Footer>
+                        <Dialog.Footer borderTop="1px solid" borderColor="var(--card-border)">
                             <Button variant="ghost" mr={3} onClick={() => setIsOpen(false)}>Batal</Button>
                             <Button colorPalette="blue" onClick={handleAddBarang}>Simpan</Button>
                         </Dialog.Footer>
@@ -250,32 +273,46 @@ export default function AdminStokPage() {
 
             {/* Add Stok Dialog */}
             <Dialog.Root open={isStokOpen} onOpenChange={(e) => setIsStokOpen(e.open)}>
-                <Dialog.Backdrop />
+                <Dialog.Backdrop bg="blackAlpha.600" />
                 <Dialog.Positioner>
-                    <Dialog.Content>
-                        <Dialog.Header>
-                            <Dialog.Title>Tambah Stok - {selectedBarang?.nama}</Dialog.Title>
+                    <Dialog.Content bg="var(--card-bg)" borderColor="var(--card-border)">
+                        <Dialog.Header borderBottom="1px solid" borderColor="var(--card-border)">
+                            <Dialog.Title color="var(--foreground)">Tambah Stok - {selectedBarang?.nama}</Dialog.Title>
                             <Dialog.CloseTrigger />
                         </Dialog.Header>
-                        <Dialog.Body>
+                        <Dialog.Body py={5}>
                             <VStack gap={4}>
                                 <Field.Root required>
-                                    <Field.Label>Jumlah</Field.Label>
-                                    <Input type="number" value={jumlahStok} onChange={(e) => setJumlahStok(e.target.value)} />
+                                    <Field.Label color="var(--foreground)">Jumlah</Field.Label>
+                                    <Input
+                                        type="number"
+                                        value={jumlahStok}
+                                        onChange={(e) => setJumlahStok(e.target.value)}
+                                        bg="var(--input-bg)"
+                                        borderColor="var(--input-border)"
+                                        color="var(--foreground)"
+                                    />
                                 </Field.Root>
                                 <Field.Root>
-                                    <Field.Label>Tanggal Masuk</Field.Label>
-                                    <Input type="date" value={tanggalMasuk} onChange={(e) => setTanggalMasuk(e.target.value)} />
+                                    <Field.Label color="var(--foreground)">Tanggal Masuk</Field.Label>
+                                    <Input
+                                        type="date"
+                                        value={tanggalMasuk}
+                                        onChange={(e) => setTanggalMasuk(e.target.value)}
+                                        bg="var(--input-bg)"
+                                        borderColor="var(--input-border)"
+                                        color="var(--foreground)"
+                                    />
                                 </Field.Root>
                             </VStack>
                         </Dialog.Body>
-                        <Dialog.Footer>
+                        <Dialog.Footer borderTop="1px solid" borderColor="var(--card-border)">
                             <Button variant="ghost" mr={3} onClick={() => setIsStokOpen(false)}>Batal</Button>
                             <Button colorPalette="green" onClick={handleAddStok}>Tambah Stok</Button>
                         </Dialog.Footer>
                     </Dialog.Content>
                 </Dialog.Positioner>
             </Dialog.Root>
-        </Box>
+        </>
     );
 }
