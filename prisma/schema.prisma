@@ -1,0 +1,185 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================
+// Kategori - Kategori barang (ATK, Elektronik, dll)
+// ============================================
+model Kategori {
+  id        String   @id @default(cuid())
+  nama      String   @unique
+  createdAt DateTime @default(now())
+
+  // Relations
+  barang Barang[]
+}
+
+// ============================================
+// UnitKerja - Departemen/Unit (IT, HRD, Finance)
+// ============================================
+model UnitKerja {
+  id           String   @id @default(cuid())
+  nama         String   @unique
+  kode         String   @unique // IT, HRD, FIN, etc
+  quotaBulanan Int      @default(100) // Max request per bulan
+  createdAt    DateTime @default(now())
+
+  // Relations
+  users User[]
+}
+
+// ============================================
+// User - Untuk Admin dan Unit Kerja
+// ============================================
+model User {
+  id          String     @id @default(cuid())
+  email       String     @unique
+  password    String
+  nama        String
+  role        String     @default("UNIT_KERJA") // ADMIN | UNIT_KERJA | KEPALA_UNIT
+  unitKerjaId String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  unitKerja     UnitKerja?      @relation(fields: [unitKerjaId], references: [id])
+  requests      Request[]
+  transaksiLogs TransaksiLog[]
+  notifikasi    Notifikasi[]
+}
+
+// ============================================
+// Barang - Master data barang
+// ============================================
+model Barang {
+  id          String    @id @default(cuid())
+  nama        String
+  satuan      String    // pcs, kg, liter, dll
+  stokTotal   Int       @default(0)
+  stokMinimum Int       @default(10) // Alert threshold
+  barcode     String?   @unique // For QR/barcode scanning
+  kategoriId  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  kategori      Kategori?      @relation(fields: [kategoriId], references: [id])
+  batches       StockBatch[]
+  requestItems  RequestItem[]
+  transaksiLogs TransaksiLog[]
+}
+
+// ============================================
+// StockBatch - Untuk tracking FIFO
+// Setiap kali barang masuk, buat batch baru
+// ============================================
+model StockBatch {
+  id            String    @id @default(cuid())
+  barangId      String
+  jumlah        Int       // Jumlah awal saat masuk
+  sisaJumlah    Int       // Sisa yang belum terpakai (untuk FIFO)
+  tanggalMasuk  DateTime  @default(now())
+  tanggalExpiry DateTime? // Untuk barang yang punya masa kadaluarsa
+  createdAt     DateTime  @default(now())
+
+  // Relations
+  barang Barang @relation(fields: [barangId], references: [id], onDelete: Cascade)
+
+  @@index([barangId, tanggalMasuk])
+  @@index([tanggalExpiry])
+}
+
+// ============================================
+// Request - Permintaan barang dari Unit Kerja
+// ============================================
+model Request {
+  id           String   @id @default(cuid())
+  userId       String
+  status       String   @default("PENDING") // PENDING | APPROVED | REJECTED | PARTIAL
+  catatan      String?
+  alasanTolak  String?  // Reason for rejection
+  currentLevel Int      @default(1) // Current approval level
+  maxLevel     Int      @default(1) // Total levels needed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items RequestItem[]
+}
+
+// ============================================
+// RequestItem - Detail barang yang diminta
+// ============================================
+model RequestItem {
+  id              String @id @default(cuid())
+  requestId       String
+  barangId        String
+  jumlahDiminta   Int
+  jumlahDisetujui Int    @default(0)
+
+  // Relations
+  request Request @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  barang  Barang  @relation(fields: [barangId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([barangId])
+}
+
+// ============================================
+// TransaksiLog - Riwayat transaksi barang
+// ============================================
+model TransaksiLog {
+  id         String   @id @default(cuid())
+  barangId   String
+  userId     String
+  tipe       String   // MASUK | KELUAR | RETURN
+  jumlah     Int
+  keterangan String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  barang Barang @relation(fields: [barangId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([barangId])
+  @@index([createdAt])
+}
+
+// ============================================
+// Notifikasi - In-app notifications
+// ============================================
+model Notifikasi {
+  id        String   @id @default(cuid())
+  userId    String
+  judul     String
+  pesan     String
+  tipe      String   // STOK_MENIPIS | REQUEST_BARU | STATUS_UPDATE | EXPIRY_WARNING
+  dibaca    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, dibaca])
+}
+
+// ============================================
+// ApprovalLevel - Multi-level approval config
+// ============================================
+model ApprovalLevel {
+  id        String   @id @default(cuid())
+  level     Int      // 1, 2, 3...
+  nama      String   // Kepala Unit, Admin Gudang
+  roleRequired String // Role yang bisa approve di level ini
+  createdAt DateTime @default(now())
+}
