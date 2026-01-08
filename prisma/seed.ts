@@ -69,10 +69,10 @@ async function main() {
     // ============================================
     const adminPassword = await bcrypt.hash("admin123", 10);
     const admin = await prisma.user.upsert({
-        where: { email: "admin@hanadap.com" },
+        where: { email: "tegararsya0117@gmail.com" },
         update: {},
         create: {
-            email: "admin@hanadap.com",
+            email: "tegararsya0117@gmail.com",
             password: adminPassword,
             nama: "Administrator",
             role: "ADMIN",
@@ -82,10 +82,10 @@ async function main() {
 
     const userPassword = await bcrypt.hash("user123", 10);
     const userIT = await prisma.user.upsert({
-        where: { email: "it@hanadap.com" },
+        where: { email: "tegararsyadani0117@gmail.com" },
         update: {},
         create: {
-            email: "it@hanadap.com",
+            email: "tegararsyadani0117@gmail.com",
             password: userPassword,
             nama: "Staff IT",
             role: "UNIT_KERJA",
@@ -94,18 +94,18 @@ async function main() {
     });
     console.log("Created unit kerja user:", userIT.email);
 
-    const userHRD = await prisma.user.upsert({
-        where: { email: "hrd@hanadap.com" },
-        update: {},
-        create: {
-            email: "hrd@hanadap.com",
-            password: userPassword,
-            nama: "Staff HRD",
-            role: "UNIT_KERJA",
-            unitKerjaId: unitHRD.id,
-        },
-    });
-    console.log("Created unit kerja user:", userHRD.email);
+    // const userHRD = await prisma.user.upsert({
+    //     where: { email: "hrd@hanadap.com" },
+    //     update: {},
+    //     create: {
+    //         email: "hrd@hanadap.com",
+    //         password: userPassword,
+    //         nama: "Staff HRD",
+    //         role: "UNIT_KERJA",
+    //         unitKerjaId: unitHRD.id,
+    //     },
+    // });
+    // console.log("Created unit kerja user:", userHRD.email);
 
     // ============================================
     // Create Barang with Kategori
@@ -244,9 +244,8 @@ async function main() {
 
     console.log("\n✅ Seeding completed!");
     console.log("\n📋 Login credentials:");
-    console.log("Admin: admin@hanadap.com / admin123");
-    console.log("IT Staff: it@hanadap.com / user123");
-    console.log("HRD Staff: hrd@hanadap.com / user123");
+    console.log("Admin: tegararsya0117@gmail.com / admin123");
+    console.log("IT Staff: tegararsyadani0117@gmail.com / user123");
 }
 
 main()
