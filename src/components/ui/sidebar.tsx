@@ -35,6 +35,7 @@ interface MenuItem {
     href: string;
     label: string;
     icon: IconType;
+    hidden?: boolean; // Add hidden property
 }
 
 interface SidebarContextType {
@@ -181,7 +182,7 @@ export function Sidebar({ menus, variant, title, badgeText }: SidebarProps) {
 
             {/* Navigation */}
             <VStack gap={1} align="stretch" px={2} flex={1}>
-                {menus.map((menu) => {
+                {menus.filter(menu => !menu.hidden).map((menu) => {
                     const isActive = pathname === menu.href;
                     const IconComponent = menu.icon;
                     return (

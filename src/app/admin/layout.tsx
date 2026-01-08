@@ -25,7 +25,7 @@ const adminMenus = [
     { href: "/admin/users", label: "Manajemen User", icon: FiUsers },
     { href: "/admin/kategori", label: "Kategori", icon: FiTag },
     { href: "/admin/unit-kerja", label: "Unit Kerja", icon: FiGrid },
-    { href: "/admin/approval", label: "Config Approval", icon: FiSettings },
+    { href: "/admin/approval", label: "Config Approval", icon: FiSettings, hidden: true },
     { href: "/admin/activity", label: "Activity Log", icon: FiActivity },
     { href: "/admin/laporan", label: "Laporan", icon: FiFileText },
     { href: "/profil", label: "Profil Saya", icon: FiUser },
