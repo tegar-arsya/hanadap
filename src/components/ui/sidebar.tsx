@@ -137,7 +137,13 @@ export function Sidebar({ menus, variant, title, badgeText }: SidebarProps) {
     const sidebarWidth = isCollapsed ? "80px" : "260px";
 
     const SidebarContent = (
-        <VStack gap={4} align="stretch" h="full" py={4}>
+        <VStack
+            gap={4}
+            align="stretch"
+            h="full"
+            py={4}
+            bgGradient="linear(180deg, rgba(37,99,235,0.08), rgba(22,163,74,0.05))"
+        >
             {/* Logo Section */}
             <HStack
                 px={isCollapsed ? 2 : 4}
@@ -183,7 +189,7 @@ export function Sidebar({ menus, variant, title, badgeText }: SidebarProps) {
             {/* Navigation */}
             <VStack gap={1} align="stretch" px={2} flex={1}>
                 {menus.filter(menu => !menu.hidden).map((menu) => {
-                    const isActive = pathname === menu.href;
+                    const isActive = pathname === menu.href || pathname.startsWith(`${menu.href}/`);
                     const IconComponent = menu.icon;
                     return (
                         <Link key={menu.href} href={menu.href}>
@@ -199,6 +205,9 @@ export function Sidebar({ menus, variant, title, badgeText }: SidebarProps) {
                                 gap={3}
                                 justify={isCollapsed ? "center" : "flex-start"}
                                 title={isCollapsed ? menu.label : undefined}
+                                borderLeft={isActive ? "3px solid" : "3px solid transparent"}
+                                borderColor={isActive ? activeColor : "transparent"}
+                                boxShadow={isActive ? "0 10px 30px -20px rgba(37,99,235,0.6)" : "none"}
                             >
                                 <IconComponent size={20} style={{ flexShrink: 0 }} />
                                 {!isCollapsed && (
