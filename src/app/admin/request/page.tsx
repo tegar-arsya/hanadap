@@ -172,8 +172,8 @@ export default function AdminRequestPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleAction(request, "reject")}
-                        isDisabled={processingId === request.id}
-                        isLoading={processingId === request.id}
+                        disabled={processingId === request.id}
+                        loading={processingId === request.id}
                         loadingText="Memproses..."
                         spinnerPlacement="start"
                     >
@@ -184,8 +184,8 @@ export default function AdminRequestPage() {
                         colorPalette="green"
                         size="sm"
                         onClick={() => handleAction(request, "approve")}
-                        isDisabled={processingId === request.id}
-                        isLoading={processingId === request.id}
+                        disabled={processingId === request.id}
+                        loading={processingId === request.id}
                         loadingText="Memproses..."
                         spinnerPlacement="start"
                     >
