@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { kurangiStokFIFO } from "@/lib/fifo";
 import { logActivity } from "@/lib/activity-logger";
+import { sendEmail, emailTemplates } from "@/lib/email";
 
 // GET - Ambil semua request (filtered by role)
 export async function GET() {
@@ -168,6 +169,7 @@ export async function PATCH(request: NextRequest) {
             data: { status },
             include: {
                 items: { include: { barang: true } },
+                user: { select: { nama: true, email: true } },
             },
         });
 
@@ -183,6 +185,18 @@ export async function PATCH(request: NextRequest) {
             entityId: requestId,
             description: `Request ${status === "APPROVED" ? "disetujui" : "ditolak"} oleh ${session.user.name}: ${itemDetails}`,
         });
+
+        // Kirim email notifikasi ke peminta jika SMTP tersedia
+        if (updatedRequest.user?.email) {
+            if (status === "APPROVED") {
+                const items = updatedRequest.items.map((item) => `${item.barang.nama} (${item.jumlahDisetujui || item.jumlahDiminta})`);
+                const template = emailTemplates.requestApproved(updatedRequest.user.nama || "Pengguna", items);
+                await sendEmail({ to: updatedRequest.user.email, ...template }).catch((err) => console.error("[Email] Failed to send approval email", err));
+            } else if (status === "REJECTED") {
+                const template = emailTemplates.requestRejected(updatedRequest.user.nama || "Pengguna", "Tidak tersedia");
+                await sendEmail({ to: updatedRequest.user.email, ...template }).catch((err) => console.error("[Email] Failed to send rejection email", err));
+            }
+        }
 
         return NextResponse.json(updatedRequest);
     } catch (error) {

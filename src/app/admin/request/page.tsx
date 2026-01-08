@@ -36,6 +36,7 @@ interface Request {
 export default function AdminRequestPage() {
     const [requests, setRequests] = useState<Request[]>([]);
     const [loading, setLoading] = useState(true);
+    const [processingId, setProcessingId] = useState<string | null>(null);
 
     const showToast = (title: string, type: "success" | "error" | "info") => {
         toaster.create({
@@ -61,6 +62,9 @@ export default function AdminRequestPage() {
     }, []);
 
     const handleAction = async (request: Request, action: "approve" | "reject") => {
+        if (processingId) return; // prevent double submit across requests
+        setProcessingId(request.id);
+
         try {
             const status = action === "approve" ? "APPROVED" : "REJECTED";
             const approvedItems = action === "approve"
@@ -91,6 +95,8 @@ export default function AdminRequestPage() {
             }
         } catch (error) {
             showToast("Gagal memproses request", "error");
+        } finally {
+            setProcessingId(null);
         }
     };
 
@@ -166,6 +172,10 @@ export default function AdminRequestPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => handleAction(request, "reject")}
+                        isDisabled={processingId === request.id}
+                        isLoading={processingId === request.id}
+                        loadingText="Memproses..."
+                        spinnerPlacement="start"
                     >
                         <FiX />
                         Tolak
@@ -174,6 +184,10 @@ export default function AdminRequestPage() {
                         colorPalette="green"
                         size="sm"
                         onClick={() => handleAction(request, "approve")}
+                        isDisabled={processingId === request.id}
+                        isLoading={processingId === request.id}
+                        loadingText="Memproses..."
+                        spinnerPlacement="start"
                     >
                         <FiCheck />
                         Setujui
