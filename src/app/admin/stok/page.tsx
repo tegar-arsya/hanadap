@@ -37,6 +37,7 @@ interface Barang {
 
 export default function AdminStokPage() {
     const [barangList, setBarangList] = useState<Barang[]>([]);
+    const [kategoriList, setKategoriList] = useState<{ id: string; nama: string }[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [isOpen, setIsOpen] = useState(false);
@@ -49,6 +50,7 @@ export default function AdminStokPage() {
     const [selectedBarang, setSelectedBarang] = useState<Barang | null>(null);
     const [jumlahStok, setJumlahStok] = useState("");
     const [tanggalMasuk, setTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
+    const [kategoriId, setKategoriId] = useState("");
 
     const showToast = (title: string, type: "success" | "error") => {
         toaster.create({ title, type });
@@ -66,8 +68,19 @@ export default function AdminStokPage() {
         }
     };
 
+    const fetchKategori = async () => {
+        try {
+            const res = await fetch("/api/kategori");
+            const data = await res.json();
+            setKategoriList(data);
+        } catch (error) {
+            console.error("Error fetching kategori:", error);
+        }
+    };
+
     useEffect(() => {
         fetchBarang();
+        fetchKategori();
     }, []);
 
     const handleAddBarang = async () => {
@@ -76,7 +89,12 @@ export default function AdminStokPage() {
             await fetch("/api/barang", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nama, satuan, stokMinimum: parseInt(stokMinimum) }),
+                body: JSON.stringify({
+                    nama,
+                    satuan,
+                    stokMinimum: parseInt(stokMinimum),
+                    kategoriId: kategoriId || null,
+                }),
             });
             showToast("Barang berhasil ditambahkan", "success");
             setNama("");
@@ -260,6 +278,28 @@ export default function AdminStokPage() {
                                         borderColor="var(--input-border)"
                                         color="var(--foreground)"
                                     />
+                                </Field.Root>
+                                <Field.Root>
+                                    <Field.Label color="var(--foreground)">Kategori</Field.Label>
+                                    <select
+                                        value={kategoriId}
+                                        onChange={(e) => setKategoriId(e.target.value)}
+                                        style={{
+                                            width: "100%",
+                                            padding: "0.5rem",
+                                            borderRadius: "0.375rem",
+                                            border: "1px solid var(--input-border)",
+                                            background: "var(--input-bg)",
+                                            color: "var(--foreground)",
+                                        }}
+                                    >
+                                        <option value="">Pilih Kategori</option>
+                                        {kategoriList.map((kategori) => (
+                                            <option key={kategori.id} value={kategori.id}>
+                                                {kategori.nama}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </Field.Root>
                             </VStack>
                         </Dialog.Body>
