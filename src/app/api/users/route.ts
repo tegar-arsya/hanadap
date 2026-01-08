@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import bcrypt from "bcryptjs";
+import { logActivity } from "@/lib/activity-logger";
 
 // GET - Get all users (Admin only)
 export async function GET() {
@@ -94,6 +95,15 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: "CREATE",
+            entity: "USER",
+            entityId: user.id,
+            description: `Membuat user baru: ${user.nama} (${user.email})`,
+        });
+
         return NextResponse.json(user, { status: 201 });
     } catch (error) {
         console.error("Error creating user:", error);
@@ -149,6 +159,15 @@ export async function PATCH(request: NextRequest) {
                 isActive: true,
                 unitKerjaId: true,
             },
+        });
+
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: "UPDATE",
+            entity: "USER",
+            entityId: user.id,
+            description: `Mengupdate user: ${user.nama}`,
         });
 
         return NextResponse.json(user);

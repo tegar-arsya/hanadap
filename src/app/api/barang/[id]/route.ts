@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { logActivity } from "@/lib/activity-logger";
 
 // DELETE - Hapus barang (Admin only)
 export async function DELETE(
@@ -20,8 +21,22 @@ export async function DELETE(
 
         const { id } = await params;
 
+        // Get barang name before delete
+        const barang = await prisma.barang.findUnique({
+            where: { id },
+        });
+
         await prisma.barang.delete({
             where: { id },
+        });
+
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: "DELETE",
+            entity: "BARANG",
+            entityId: id,
+            description: `Menghapus barang: ${barang?.nama || id}`,
         });
 
         return NextResponse.json({ message: "Barang berhasil dihapus" });
@@ -56,6 +71,15 @@ export async function PUT(
         const barang = await prisma.barang.update({
             where: { id },
             data: { nama, satuan },
+        });
+
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: "UPDATE",
+            entity: "BARANG",
+            entityId: id,
+            description: `Mengupdate barang: ${barang.nama}`,
         });
 
         return NextResponse.json(barang);

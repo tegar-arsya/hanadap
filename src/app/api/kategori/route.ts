@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { logActivity } from "@/lib/activity-logger";
 
 // GET - Ambil semua kategori
 export async function GET() {
@@ -47,6 +48,15 @@ export async function POST(request: NextRequest) {
 
         const kategori = await prisma.kategori.create({
             data: { nama },
+        });
+
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: "CREATE",
+            entity: "KATEGORI",
+            entityId: kategori.id,
+            description: `Membuat kategori baru: ${kategori.nama}`,
         });
 
         return NextResponse.json(kategori, { status: 201 });

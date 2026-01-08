@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import * as XLSX from "xlsx";
+import { logActivity } from "@/lib/activity-logger";
 
 // POST - Import barang from Excel
 export async function POST(request: NextRequest) {
@@ -113,6 +114,14 @@ export async function POST(request: NextRequest) {
                 results.failed++;
             }
         }
+
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: "IMPORT",
+            entity: "BARANG",
+            description: `Import barang: ${results.success} berhasil, ${results.failed} gagal`,
+        });
 
         return NextResponse.json({
             message: `Import selesai: ${results.success} berhasil, ${results.failed} gagal`,

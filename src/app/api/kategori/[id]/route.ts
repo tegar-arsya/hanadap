@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { logActivity } from "@/lib/activity-logger";
 
 // DELETE - Hapus kategori (Admin only)
 export async function DELETE(
@@ -20,8 +21,22 @@ export async function DELETE(
 
         const { id } = await params;
 
+        // Get kategori name before delete
+        const kategori = await prisma.kategori.findUnique({
+            where: { id },
+        });
+
         await prisma.kategori.delete({
             where: { id },
+        });
+
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: "DELETE",
+            entity: "KATEGORI",
+            entityId: id,
+            description: `Menghapus kategori: ${kategori?.nama || id}`,
         });
 
         return NextResponse.json({ message: "Kategori berhasil dihapus" });
@@ -53,12 +68,21 @@ export async function PUT(
         const body = await request.json();
         const { nama } = body;
 
-        const kategori = await prisma.kategori.update({
+        const kategoriUpdated = await prisma.kategori.update({
             where: { id },
             data: { nama },
         });
 
-        return NextResponse.json(kategori);
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: "UPDATE",
+            entity: "KATEGORI",
+            entityId: id,
+            description: `Mengupdate kategori menjadi: ${nama}`,
+        });
+
+        return NextResponse.json(kategoriUpdated);
     } catch (error) {
         console.error("Error updating kategori:", error);
         return NextResponse.json(

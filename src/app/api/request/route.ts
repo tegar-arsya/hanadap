@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { kurangiStokFIFO } from "@/lib/fifo";
+import { logActivity } from "@/lib/activity-logger";
 
 // GET - Ambil semua request (filtered by role)
 export async function GET() {
@@ -93,6 +94,15 @@ export async function POST(request: NextRequest) {
             },
         });
 
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: "CREATE",
+            entity: "REQUEST",
+            entityId: newRequest.id,
+            description: `Membuat request baru dengan ${items.length} item`,
+        });
+
         return NextResponse.json(newRequest, { status: 201 });
     } catch (error) {
         console.error("Error creating request:", error);
@@ -155,6 +165,15 @@ export async function PATCH(request: NextRequest) {
             include: {
                 items: { include: { barang: true } },
             },
+        });
+
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: status === "APPROVED" ? "APPROVE" : "REJECT",
+            entity: "REQUEST",
+            entityId: requestId,
+            description: `Request ${status === "APPROVED" ? "disetujui" : "ditolak"}`,
         });
 
         return NextResponse.json(updatedRequest);

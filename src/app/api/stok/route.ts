@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { tambahStok } from "@/lib/fifo";
+import { logActivity } from "@/lib/activity-logger";
 
 // POST - Tambah stok (buat batch baru) - Admin only
 export async function POST(request: NextRequest) {
@@ -44,6 +45,15 @@ export async function POST(request: NextRequest) {
             jumlah,
             tanggalMasuk ? new Date(tanggalMasuk) : undefined
         );
+
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: "ADD_STOCK",
+            entity: "BARANG",
+            entityId: barangId,
+            description: `Menambah stok ${barang.nama} sebanyak ${jumlah} ${barang.satuan}`,
+        });
 
         return NextResponse.json(
             { message: "Stok berhasil ditambahkan" },

@@ -11,7 +11,7 @@ import {
     Flex,
     Text,
 } from "@chakra-ui/react";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import { FiChevronLeft, FiChevronRight, FiInbox } from "react-icons/fi";
 import { PageHeader, Card, EmptyStateBox } from "@/components/ui/shared";
 
 interface ActivityLog {
@@ -65,27 +65,34 @@ export default function AdminActivityPage() {
 
     return (
         <Box>
-            <PageHeader title="Activity Log" subtitle="Riwayat aktivitas pengguna sistem" />
+            <PageHeader title="Activity Log" description="Riwayat aktivitas pengguna sistem" />
 
-            <Card style={{ marginBottom: "1.5rem" }}>
-                <NativeSelect.Root maxW="250px">
-                    <NativeSelect.Field
-                        value={entityFilter}
-                        onChange={(e) => { setEntityFilter(e.target.value); setPage(1); }}
-                        style={{
-                            background: "var(--input-bg)",
-                            borderColor: "var(--input-border)",
-                            color: "var(--foreground)",
-                        }}
-                    >
-                        <option value="" style={{ background: "var(--card-bg)" }}>Semua Entity</option>
-                        {ENTITIES.map((e) => <option key={e} value={e} style={{ background: "var(--card-bg)" }}>{e}</option>)}
-                    </NativeSelect.Field>
-                </NativeSelect.Root>
-            </Card>
+            <Box mb="1.5rem">
+                <Card>
+                    <NativeSelect.Root maxW="250px">
+                        <NativeSelect.Field
+                            value={entityFilter}
+                            onChange={(e) => { setEntityFilter(e.target.value); setPage(1); }}
+                            style={{
+                                background: "var(--input-bg)",
+                                borderColor: "var(--input-border)",
+                                color: "var(--foreground)",
+                            }}
+                        >
+                            <option value="" style={{ background: "var(--card-bg)" }}>Semua Entity</option>
+                            {ENTITIES.map((e) => <option key={e} value={e} style={{ background: "var(--card-bg)" }}>{e}</option>)}
+                        </NativeSelect.Field>
+                    </NativeSelect.Root>
+                </Card>
+            </Box>
 
             {logs.length === 0 && !loading ? (
-                <EmptyStateBox message="Belum ada aktivitas" />
+                <Box>
+                    <EmptyStateBox
+                        title="Belum ada aktivitas"
+                        description="Tidak ada data aktivitas yang tersedia."
+                    />
+                </Box>
             ) : (
                 <VStack gap={3} align="stretch">
                     {logs.map((log) => (

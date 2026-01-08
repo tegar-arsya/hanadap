@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { logActivity } from "@/lib/activity-logger";
 
 // GET - Ambil semua barang
 export async function GET(request: NextRequest) {
@@ -61,6 +62,15 @@ export async function POST(request: NextRequest) {
                 stokMinimum: stokMinimum || 10,
                 barcode: barcode || null,
             },
+        });
+
+        // Log activity
+        await logActivity({
+            userId: session.user.id,
+            action: "CREATE",
+            entity: "BARANG",
+            entityId: barang.id,
+            description: `Menambah barang baru: ${barang.nama}`,
         });
 
         return NextResponse.json(barang, { status: 201 });
