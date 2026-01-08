@@ -94,13 +94,17 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // Log activity
+        // Log activity dengan detail barang
+        const itemDetails = newRequest.items
+            .map((item) => `${item.barang.nama} (${item.jumlahDiminta})`)
+            .join(", ");
+
         await logActivity({
             userId: session.user.id,
             action: "CREATE",
             entity: "REQUEST",
             entityId: newRequest.id,
-            description: `Membuat request baru dengan ${items.length} item`,
+            description: `Membuat request baru: ${itemDetails}`,
         });
 
         return NextResponse.json(newRequest, { status: 201 });
@@ -167,13 +171,17 @@ export async function PATCH(request: NextRequest) {
             },
         });
 
-        // Log activity
+        // Log activity dengan detail barang dan admin
+        const itemDetails = updatedRequest.items
+            .map((item) => `${item.barang.nama} (${item.jumlahDiminta})`)
+            .join(", ");
+
         await logActivity({
             userId: session.user.id,
             action: status === "APPROVED" ? "APPROVE" : "REJECT",
             entity: "REQUEST",
             entityId: requestId,
-            description: `Request ${status === "APPROVED" ? "disetujui" : "ditolak"}`,
+            description: `Request ${status === "APPROVED" ? "disetujui" : "ditolak"} oleh ${session.user.name}: ${itemDetails}`,
         });
 
         return NextResponse.json(updatedRequest);

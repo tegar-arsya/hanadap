@@ -112,7 +112,14 @@ export default function AdminActivityPage() {
                                     {log.action}
                                 </Box>
                                 <VStack align="start" gap={0} flex={1}>
-                                    <Text fontSize="sm" style={{ color: "var(--foreground)" }}>{log.description}</Text>
+                                    <Text fontSize="sm" style={{ color: "var(--foreground)" }}>
+                                        {log.description}
+                                    </Text>
+                                    {log.entity === "REQUEST" && (
+                                        <Text fontSize="xs" style={{ color: "var(--muted-foreground)" }}>
+                                            Detail: {log.description}
+                                        </Text>
+                                    )}
                                     <HStack fontSize="xs" style={{ color: "var(--muted-foreground)" }}>
                                         <Text fontWeight="medium">{log.user.nama}</Text>
                                         <Text>•</Text>
