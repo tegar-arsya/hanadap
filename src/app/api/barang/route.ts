@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
             include: {
                 kategori: true,
                 batches: {
-                    where: { sisaJumlah: { gt: 0 } },
                     orderBy: { tanggalMasuk: "asc" },
                 },
             },
@@ -45,7 +44,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { nama, satuan, kategoriId, stokMinimum, barcode } = body;
+        const { nama, satuan, kategoriId, stokMinimum } = body;
 
         if (!nama || !satuan) {
             return NextResponse.json(
@@ -60,7 +59,6 @@ export async function POST(request: NextRequest) {
                 satuan,
                 kategoriId: kategoriId || null,
                 stokMinimum: stokMinimum || 10,
-                barcode: barcode || null,
             },
         });
 

@@ -25,7 +25,13 @@ export async function GET() {
             requests = await prisma.request.findMany({
                 orderBy: { createdAt: "desc" },
                 include: {
-                    user: { select: { nama: true, email: true } },
+                    user: { 
+                        select: { 
+                            nama: true, 
+                            email: true,
+                            unitKerja: { select: { nama: true, kode: true } }
+                        } 
+                    },
                     items: {
                         include: { barang: true },
                     },

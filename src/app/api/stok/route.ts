@@ -18,11 +18,19 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { barangId, jumlah, tanggalMasuk } = body;
+        const { barangId, jumlah, tanggalMasuk, hargaSatuan } = body;
 
         if (!barangId || !jumlah || jumlah <= 0) {
             return NextResponse.json(
                 { error: "Barang dan jumlah harus diisi dengan benar" },
+                { status: 400 }
+            );
+        }
+
+        const harga = hargaSatuan !== undefined ? Number(hargaSatuan) : 0;
+        if (Number.isNaN(harga) || harga < 0) {
+            return NextResponse.json(
+                { error: "Harga satuan tidak valid" },
                 { status: 400 }
             );
         }
@@ -43,7 +51,8 @@ export async function POST(request: NextRequest) {
         await tambahStok(
             barangId,
             jumlah,
-            tanggalMasuk ? new Date(tanggalMasuk) : undefined
+            tanggalMasuk ? new Date(tanggalMasuk) : undefined,
+            harga
         );
 
         // Log activity
@@ -52,7 +61,7 @@ export async function POST(request: NextRequest) {
             action: "ADD_STOCK",
             entity: "BARANG",
             entityId: barangId,
-            description: `Menambah stok ${barang.nama} sebanyak ${jumlah} ${barang.satuan}`,
+            description: `Menambah stok ${barang.nama} sebanyak ${jumlah} ${barang.satuan} (harga ${harga})`,
         });
 
         return NextResponse.json(

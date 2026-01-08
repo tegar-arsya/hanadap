@@ -66,7 +66,8 @@ export async function kurangiStokFIFO(
 export async function tambahStok(
     barangId: string,
     jumlah: number,
-    tanggalMasuk?: Date
+    tanggalMasuk?: Date,
+    hargaSatuan?: number
 ): Promise<void> {
     // Buat batch baru
     await prisma.stockBatch.create({
@@ -75,6 +76,7 @@ export async function tambahStok(
             jumlah,
             sisaJumlah: jumlah,
             tanggalMasuk: tanggalMasuk || new Date(),
+            hargaSatuan: hargaSatuan || 0,
         },
     });
 

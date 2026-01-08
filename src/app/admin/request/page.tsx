@@ -29,7 +29,8 @@ interface Request {
     status: string;
     catatan: string | null;
     createdAt: string;
-    user: { nama: string; email: string };
+    updatedAt: string;
+    user: { nama: string; email: string; unitKerja?: { nama: string; kode: string } };
     items: RequestItem[];
 }
 
@@ -121,20 +122,35 @@ export default function AdminRequestPage() {
                     </Avatar.Root>
                     <VStack align="start" gap={0}>
                         <Text fontWeight="semibold" color="var(--foreground)">{request.user.nama}</Text>
-                        <Text fontSize="xs" color="var(--sidebar-text-muted)">{formatDate(request.createdAt)}</Text>
+                        <Text fontSize="xs" color="var(--sidebar-text-muted)">{request.user.email}</Text>
+                        {request.user.unitKerja && (
+                            <Text fontSize="xs" color="var(--sidebar-text-muted)">
+                                {request.user.unitKerja.nama} ({request.user.unitKerja.kode})
+                            </Text>
+                        )}
                     </VStack>
                 </HStack>
-                <StatusBadge
-                    status={request.status}
-                    colorScheme={
-                        request.status === "PENDING"
-                            ? "orange"
-                            : request.status === "APPROVED"
-                                ? "green"
-                                : "red"
-                    }
-                />
+                <VStack align="end" gap={1}>
+                    <StatusBadge
+                        status={request.status}
+                        colorScheme={
+                            request.status === "PENDING"
+                                ? "orange"
+                                : request.status === "APPROVED"
+                                    ? "green"
+                                    : "red"
+                        }
+                    />
+                    <Text fontSize="xs" color="var(--sidebar-text-muted)">{formatDate(request.createdAt)}</Text>
+                </VStack>
             </Flex>
+
+            {/* ID Request untuk tracking */}
+            <Box mb={3} p={2} bg="var(--table-header-bg)" borderRadius="md">
+                <Text fontSize="xs" color="var(--sidebar-text-muted)">
+                    ID: <Text as="span" fontFamily="mono" fontWeight="medium" color="var(--foreground)">{request.id}</Text>
+                </Text>
+            </Box>
 
             <Box overflowX="auto" mx={-5} borderTop="1px solid" borderColor="var(--card-border)">
                 <Table.Root size="sm">
@@ -142,6 +158,9 @@ export default function AdminRequestPage() {
                         <Table.Row bg="var(--table-header-bg)">
                             <Table.ColumnHeader px={5} py={2} color="var(--sidebar-text-muted)" fontSize="xs">Barang</Table.ColumnHeader>
                             <Table.ColumnHeader px={5} py={2} color="var(--sidebar-text-muted)" fontSize="xs" textAlign="right">Diminta</Table.ColumnHeader>
+                            {!showActions && (
+                                <Table.ColumnHeader px={5} py={2} color="var(--sidebar-text-muted)" fontSize="xs" textAlign="right">Disetujui</Table.ColumnHeader>
+                            )}
                             <Table.ColumnHeader px={5} py={2} color="var(--sidebar-text-muted)" fontSize="xs" textAlign="right">Stok</Table.ColumnHeader>
                         </Table.Row>
                     </Table.Header>
@@ -150,6 +169,11 @@ export default function AdminRequestPage() {
                             <Table.Row key={item.id}>
                                 <Table.Cell px={5} py={2} color="var(--foreground)">{item.barang.nama}</Table.Cell>
                                 <Table.Cell px={5} py={2} textAlign="right" color="var(--foreground)">{item.jumlahDiminta} {item.barang.satuan}</Table.Cell>
+                                {!showActions && (
+                                    <Table.Cell px={5} py={2} textAlign="right" color={item.jumlahDisetujui > 0 ? "var(--stat-green-color)" : "var(--sidebar-text-muted)"}>
+                                        {item.jumlahDisetujui > 0 ? `${item.jumlahDisetujui} ${item.barang.satuan}` : "-"}
+                                    </Table.Cell>
+                                )}
                                 <Table.Cell px={5} py={2} textAlign="right" color={item.barang.stokTotal >= item.jumlahDiminta ? "var(--stat-green-color)" : "var(--stat-red-color)"}>
                                     {item.barang.stokTotal}
                                 </Table.Cell>

@@ -68,7 +68,6 @@ model Barang {
   satuan      String    // pcs, kg, liter, dll
   stokTotal   Int       @default(0)
   stokMinimum Int       @default(10) // Alert threshold
-  barcode     String?   @unique // For QR/barcode scanning
   kategoriId  String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -89,6 +88,7 @@ model StockBatch {
   barangId      String
   jumlah        Int       // Jumlah awal saat masuk
   sisaJumlah    Int       // Sisa yang belum terpakai (untuk FIFO)
+  hargaSatuan   Int       @default(0) // Harga per satuan saat batch masuk
   tanggalMasuk  DateTime  @default(now())
   tanggalExpiry DateTime? // Untuk barang yang punya masa kadaluarsa
   createdAt     DateTime  @default(now())
@@ -173,17 +173,6 @@ model Notifikasi {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, dibaca])
-}
-
-// ============================================
-// ApprovalLevel - Multi-level approval config
-// ============================================
-model ApprovalLevel {
-  id        String   @id @default(cuid())
-  level     Int      // 1, 2, 3...
-  nama      String   // Kepala Unit, Admin Gudang
-  roleRequired String // Role yang bisa approve di level ini
-  createdAt DateTime @default(now())
 }
 
 // ============================================

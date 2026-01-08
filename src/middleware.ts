@@ -6,9 +6,9 @@ export async function middleware(request: NextRequest) {
     const token = await getToken({ req: request });
     const { pathname } = request.nextUrl;
 
-    // Halaman publik
-    if (pathname === "/login") {
-        if (token) {
+    // Halaman publik (tidak perlu auth)
+    if (pathname === "/" || pathname === "/login" || pathname === "/request" || pathname === "/tracking") {
+        if (pathname === "/login" && token) {
             // Sudah login, redirect ke dashboard sesuai role
             const redirectUrl =
                 token.role === "ADMIN" ? "/admin" : "/unit-kerja";
@@ -33,16 +33,6 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    // Redirect root ke login atau dashboard
-    if (pathname === "/") {
-        if (token) {
-            const redirectUrl =
-                token.role === "ADMIN" ? "/admin" : "/unit-kerja";
-            return NextResponse.redirect(new URL(redirectUrl, request.url));
-        }
-        return NextResponse.redirect(new URL("/login", request.url));
-    }
-
     // Redirect /dashboard ke role-specific dashboard
     if (pathname === "/dashboard") {
         if (token) {
@@ -57,5 +47,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ["/", "/login", "/dashboard", "/admin/:path*", "/unit-kerja/:path*"],
+    matcher: ["/", "/login", "/request", "/tracking", "/dashboard", "/admin/:path*", "/unit-kerja/:path*"],
 };

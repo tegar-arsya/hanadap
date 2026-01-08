@@ -177,6 +177,7 @@ async function main() {
             jumlah: 50,
             sisaJumlah: 50,
             tanggalMasuk: new Date("2024-01-01"),
+            hargaSatuan: 45000,
         },
     });
 
@@ -186,6 +187,7 @@ async function main() {
             jumlah: 30,
             sisaJumlah: 30,
             tanggalMasuk: new Date("2024-01-15"),
+            hargaSatuan: 47000,
         },
     });
 
@@ -201,6 +203,7 @@ async function main() {
             jumlah: 100,
             sisaJumlah: 100,
             tanggalMasuk: new Date("2024-01-10"),
+            hargaSatuan: 6000,
         },
     });
 
@@ -216,6 +219,7 @@ async function main() {
             jumlah: 20,
             sisaJumlah: 20,
             tanggalMasuk: new Date("2024-01-05"),
+            hargaSatuan: 120000,
         },
     });
 
@@ -232,6 +236,7 @@ async function main() {
             sisaJumlah: 15,
             tanggalMasuk: new Date("2024-01-08"),
             tanggalExpiry: new Date("2025-06-01"), // Has expiry date
+            hargaSatuan: 25000,
         },
     });
 

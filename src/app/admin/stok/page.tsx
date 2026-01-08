@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import {
     VStack,
     HStack,
@@ -14,7 +14,7 @@ import {
     Box,
 } from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
-import { FiPlus, FiTrash2, FiPackage } from "react-icons/fi";
+import { FiPlus, FiTrash2, FiPackage, FiChevronDown, FiChevronRight } from "react-icons/fi";
 import {
     PageHeader,
     Card,
@@ -32,7 +32,7 @@ interface Barang {
     stokTotal: number;
     stokMinimum: number;
     kategori?: { nama: string };
-    stockBatches: { id: string; jumlah: number; sisaJumlah: number; tanggalMasuk: string }[];
+    batches: { id: string; jumlah: number; sisaJumlah: number; tanggalMasuk: string; hargaSatuan?: number }[];
 }
 
 export default function AdminStokPage() {
@@ -42,6 +42,7 @@ export default function AdminStokPage() {
     const [search, setSearch] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     const [isStokOpen, setIsStokOpen] = useState(false);
+    const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
     // Form states
     const [nama, setNama] = useState("");
@@ -49,6 +50,7 @@ export default function AdminStokPage() {
     const [stokMinimum, setStokMinimum] = useState("10");
     const [selectedBarang, setSelectedBarang] = useState<Barang | null>(null);
     const [jumlahStok, setJumlahStok] = useState("");
+    const [hargaSatuan, setHargaSatuan] = useState("");
     const [tanggalMasuk, setTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
     const [kategoriId, setKategoriId] = useState("");
 
@@ -60,9 +62,15 @@ export default function AdminStokPage() {
         try {
             const res = await fetch("/api/barang");
             const data = await res.json();
-            setBarangList(data);
+            if (Array.isArray(data)) {
+                setBarangList(data);
+            } else {
+                console.error("Error fetching barang:", data.error);
+                setBarangList([]);
+            }
         } catch (error) {
             console.error("Error fetching barang:", error);
+            setBarangList([]);
         } finally {
             setLoading(false);
         }
@@ -115,11 +123,13 @@ export default function AdminStokPage() {
                 body: JSON.stringify({
                     barangId: selectedBarang.id,
                     jumlah: parseInt(jumlahStok),
+                    hargaSatuan: hargaSatuan ? parseInt(hargaSatuan) : 0,
                     tanggalMasuk,
                 }),
             });
             showToast("Stok berhasil ditambahkan", "success");
             setJumlahStok("");
+            setHargaSatuan("");
             setIsStokOpen(false);
             fetchBarang();
         } catch (error) {
@@ -147,6 +157,25 @@ export default function AdminStokPage() {
         if (barang.stokTotal <= barang.stokMinimum) return { label: "Menipis", color: "orange" as const };
         return { label: "Tersedia", color: "green" as const };
     };
+
+    const toggleExpanded = (id: string) => {
+        setExpanded((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    const formatDate = (date: string) =>
+        new Date(date).toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+        });
 
     return (
         <>
@@ -194,40 +223,74 @@ export default function AdminStokPage() {
                             ) : (
                                 filteredBarang.map((barang) => {
                                     const status = getStatusInfo(barang);
+                                    const batches = (barang.batches ?? []).slice().sort(
+                                        (a, b) => new Date(a.tanggalMasuk).getTime() - new Date(b.tanggalMasuk).getTime()
+                                    );
+                                    const isExpanded = expanded.has(barang.id);
                                     return (
-                                        <Table.Row key={barang.id} _hover={{ bg: "var(--table-row-hover)" }}>
-                                            <Table.Cell px={5} py={3} fontWeight="medium" color="var(--foreground)">{barang.nama}</Table.Cell>
-                                            <Table.Cell px={5} py={3} color="var(--sidebar-text-muted)">{barang.kategori?.nama || "-"}</Table.Cell>
-                                            <Table.Cell px={5} py={3} color="var(--foreground)">{barang.satuan}</Table.Cell>
-                                            <Table.Cell px={5} py={3} textAlign="right" fontWeight="semibold" color="var(--foreground)">{barang.stokTotal}</Table.Cell>
-                                            <Table.Cell px={5} py={3} textAlign="right" color="var(--sidebar-text-muted)">{barang.stokMinimum}</Table.Cell>
-                                            <Table.Cell px={5} py={3}>
-                                                <StatusBadge status={status.label} colorScheme={status.color} />
-                                            </Table.Cell>
-                                            <Table.Cell px={5} py={3}>
-                                                <HStack>
-                                                    <Button
-                                                        size="xs"
-                                                        colorPalette="green"
-                                                        onClick={() => {
-                                                            setSelectedBarang(barang);
-                                                            setIsStokOpen(true);
-                                                        }}
-                                                    >
-                                                        + Stok
-                                                    </Button>
-                                                    <IconButton
-                                                        aria-label="Delete"
-                                                        size="xs"
-                                                        colorPalette="red"
-                                                        variant="ghost"
-                                                        onClick={() => handleDeleteBarang(barang.id)}
-                                                    >
-                                                        <FiTrash2 />
-                                                    </IconButton>
-                                                </HStack>
-                                            </Table.Cell>
-                                        </Table.Row>
+                                        <Fragment key={barang.id}>
+                                            <Table.Row _hover={{ bg: "var(--table-row-hover)" }}>
+                                                <Table.Cell px={5} py={3} fontWeight="medium" color="var(--foreground)">{barang.nama}</Table.Cell>
+                                                <Table.Cell px={5} py={3} color="var(--sidebar-text-muted)">{barang.kategori?.nama || "-"}</Table.Cell>
+                                                <Table.Cell px={5} py={3} color="var(--foreground)">{barang.satuan}</Table.Cell>
+                                                <Table.Cell px={5} py={3} textAlign="right" fontWeight="semibold" color="var(--foreground)">{barang.stokTotal}</Table.Cell>
+                                                <Table.Cell px={5} py={3} textAlign="right" color="var(--sidebar-text-muted)">{barang.stokMinimum}</Table.Cell>
+                                                <Table.Cell px={5} py={3}>
+                                                    <StatusBadge status={status.label} colorScheme={status.color} />
+                                                </Table.Cell>
+                                                <Table.Cell px={5} py={3}>
+                                                    <HStack>
+                                                        <IconButton
+                                                            aria-label="Detail batch"
+                                                            size="xs"
+                                                            variant="ghost"
+                                                            onClick={() => toggleExpanded(barang.id)}
+                                                        >
+                                                            {isExpanded ? <FiChevronDown /> : <FiChevronRight />}
+                                                        </IconButton>
+                                                        <Button
+                                                            size="xs"
+                                                            colorPalette="green"
+                                                            onClick={() => {
+                                                                setSelectedBarang(barang);
+                                                                setIsStokOpen(true);
+                                                            }}
+                                                        >
+                                                            + Stok
+                                                        </Button>
+                                                        <IconButton
+                                                            aria-label="Delete"
+                                                            size="xs"
+                                                            colorPalette="red"
+                                                            variant="ghost"
+                                                            onClick={() => handleDeleteBarang(barang.id)}
+                                                        >
+                                                            <FiTrash2 />
+                                                        </IconButton>
+                                                    </HStack>
+                                                </Table.Cell>
+                                            </Table.Row>
+                                            {isExpanded && (
+                                                <Table.Row bg="var(--card-bg-subtle)">
+                                                    <Table.Cell colSpan={7} px={5} py={3}>
+                                                        {batches.length === 0 ? (
+                                                            <Box color="var(--sidebar-text-muted)">Tidak ada batch aktif.</Box>
+                                                        ) : (
+                                                            <VStack align="stretch" gap={2}>
+                                                                {batches.map((batch) => (
+                                                                    <HStack key={batch.id} justify="space-between" wrap="wrap">
+                                                                        <Box color="var(--foreground)"><strong>Tanggal:</strong> {formatDate(batch.tanggalMasuk)}</Box>
+                                                                        <Box color="var(--foreground)"><strong>Jumlah:</strong> {batch.jumlah}</Box>
+                                                                        <Box color="var(--foreground)"><strong>Sisa:</strong> {batch.sisaJumlah}</Box>
+                                                                        <Box color="var(--foreground)"><strong>Harga:</strong> {batch.hargaSatuan ? batch.hargaSatuan.toLocaleString("id-ID") : "-"}</Box>
+                                                                    </HStack>
+                                                                ))}
+                                                            </VStack>
+                                                        )}
+                                                    </Table.Cell>
+                                                </Table.Row>
+                                            )}
+                                        </Fragment>
                                     );
                                 })
                             )}
@@ -328,6 +391,18 @@ export default function AdminStokPage() {
                                         type="number"
                                         value={jumlahStok}
                                         onChange={(e) => setJumlahStok(e.target.value)}
+                                        bg="var(--input-bg)"
+                                        borderColor="var(--input-border)"
+                                        color="var(--foreground)"
+                                    />
+                                </Field.Root>
+                                <Field.Root>
+                                    <Field.Label color="var(--foreground)">Harga Satuan</Field.Label>
+                                    <Input
+                                        type="number"
+                                        value={hargaSatuan}
+                                        onChange={(e) => setHargaSatuan(e.target.value)}
+                                        placeholder="Masukkan harga per satuan"
                                         bg="var(--input-bg)"
                                         borderColor="var(--input-border)"
                                         color="var(--foreground)"

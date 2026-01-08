@@ -68,7 +68,6 @@ export async function POST(request: NextRequest) {
                 const satuan = String(row.satuan || "").trim();
                 const stokMinimum = parseInt(String(row.stokMinimum || row["stok_minimum"] || "10"));
                 const kategoriNama = String(row.kategori || "").trim();
-                const barcode = String(row.barcode || "").trim() || null;
 
                 if (!nama || !satuan) {
                     results.errors.push(`Row skipped: nama atau satuan kosong`);
@@ -96,7 +95,6 @@ export async function POST(request: NextRequest) {
                         satuan,
                         stokMinimum,
                         kategoriId,
-                        barcode,
                     },
                     create: {
                         id: `import-${nama.toLowerCase().replace(/\s+/g, "-")}`,
@@ -104,7 +102,6 @@ export async function POST(request: NextRequest) {
                         satuan,
                         stokMinimum,
                         kategoriId,
-                        barcode,
                     },
                 });
 

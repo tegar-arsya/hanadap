@@ -3,7 +3,6 @@
 import {
     FiHome,
     FiPackage,
-    FiCamera,
     FiUpload,
     FiClipboard,
     FiUsers,
@@ -19,7 +18,6 @@ import { SidebarProvider, DashboardLayout } from "@/components/ui/sidebar";
 const adminMenus = [
     { href: "/admin", label: "Dashboard", icon: FiHome },
     { href: "/admin/stok", label: "Kelola Stok", icon: FiPackage },
-    { href: "/admin/scan", label: "Scan Barcode", icon: FiCamera, hidden: true },
     { href: "/admin/import", label: "Import Data", icon: FiUpload },
     { href: "/admin/request", label: "Permintaan", icon: FiClipboard },
     { href: "/admin/users", label: "Manajemen User", icon: FiUsers },

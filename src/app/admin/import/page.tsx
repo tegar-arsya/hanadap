@@ -49,7 +49,7 @@ export default function AdminImportPage() {
     };
 
     const downloadTemplate = () => {
-        const template = "nama,satuan,stokMinimum,kategori,barcode\nKertas A4,rim,20,ATK,1234567890\nPulpen,pcs,50,ATK,\nTinta Printer,botol,5,Elektronik,";
+        const template = "nama,satuan,stokMinimum,kategori\nKertas A4,rim,20,ATK\nPulpen,pcs,50,ATK\nTinta Printer,botol,5,Elektronik";
         const blob = new Blob([template], { type: "text/csv" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -93,11 +93,6 @@ export default function AdminImportPage() {
                                 <Table.Cell><code style={{ color: "var(--stat-blue-color)" }}>kategori</code></Table.Cell>
                                 <Table.Cell><FiX color="var(--muted-foreground)" /></Table.Cell>
                                 <Table.Cell style={{ color: "var(--foreground)" }}>Nama kategori</Table.Cell>
-                            </Table.Row>
-                            <Table.Row style={{ borderColor: "var(--card-border)" }}>
-                                <Table.Cell><code style={{ color: "var(--stat-blue-color)" }}>barcode</code></Table.Cell>
-                                <Table.Cell><FiX color="var(--muted-foreground)" /></Table.Cell>
-                                <Table.Cell style={{ color: "var(--foreground)" }}>Barcode/QR</Table.Cell>
                             </Table.Row>
                         </Table.Body>
                     </Table.Root>

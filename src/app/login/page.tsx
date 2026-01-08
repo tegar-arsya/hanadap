@@ -39,7 +39,8 @@ export default function LoginPage() {
             if (result?.error) {
                 setError("Email atau password salah");
             } else {
-                router.push("/");
+                // Redirect ke dashboard, middleware akan handle role-based redirect
+                router.push("/dashboard");
                 router.refresh();
             }
         } catch {
