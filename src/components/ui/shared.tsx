@@ -46,7 +46,7 @@ export function PageHeader({ title, description, children }: PageHeaderProps) {
                     {title}
                 </Heading>
                 {description && (
-                    <Text color="var(--sidebar-text-muted)" fontSize="sm">
+                    <Text>
                         {description}
                     </Text>
                 )}
