@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ===== ROOT & BASE STYLES ===== */
 :root {
   /* Light mode colors */

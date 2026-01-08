@@ -7,6 +7,7 @@ Aplikasi manajemen stok & permintaan barang (admin + unit kerja) berbasis Next.j
 - Next.js 16 (App Router)
 - React 19
 - Chakra UI
+- Tailwind CSS
 - NextAuth (Credentials)
 - Prisma ORM
 - PostgreSQL (direkomendasikan: Supabase)
