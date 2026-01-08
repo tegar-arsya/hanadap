@@ -134,7 +134,6 @@ export default function LoginPage() {
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             placeholder="email@example.com"
-                                            variant="unstyled"
                                             py={3}
                                             color="var(--foreground)"
                                             _placeholder={{ color: "var(--sidebar-text-muted)" }}
@@ -164,7 +163,6 @@ export default function LoginPage() {
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             placeholder="••••••••"
-                                            variant="unstyled"
                                             py={3}
                                             color="var(--foreground)"
                                             _placeholder={{ color: "var(--sidebar-text-muted)" }}
