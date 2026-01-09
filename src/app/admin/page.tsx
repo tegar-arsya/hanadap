@@ -100,7 +100,7 @@ export default function AdminDashboard() {
             {/* --- HEADER SECTION --- */}
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-gray-800 mb-2">Dashboard Overview</h1>
-                <p className="text-gray-600">Selamat datang kembali di Sistem Logistik BPS.</p>
+                <p className="text-gray-600">Selamat datang kembali di Sistem Logistik BARANGMU.</p>
             </div>
 
             {/* --- STATS GRID --- */}

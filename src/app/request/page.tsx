@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { FiPlus, FiTrash2, FiSend, FiPackage, FiUser, FiInfo, FiGrid } from "react-icons/fi";
 import { toaster } from "@/components/ui/toaster";
+import Link from "next/link";
+
 
 interface Barang {
   id: string;
@@ -182,12 +184,12 @@ export default function PublicRequestPage() {
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email Dinas</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                   <input
                     type="email"
                     value={emailPemohon}
                     onChange={(e) => setEmailPemohon(e.target.value)}
-                    placeholder="email@bps.go.id"
+                    placeholder="email@example.com"
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#005DA6] focus:ring-2 focus:ring-[#005DA6]/30 transition"
                   />
                 </div>
@@ -378,9 +380,11 @@ export default function PublicRequestPage() {
           {/* FOOTER */}
           <div className="text-center py-8 bg-white rounded-xl shadow-sm">
             <p className="text-sm text-gray-600 mb-2">Sudah mengajukan permintaan sebelumnya?</p>
-            <button className="inline-flex items-center gap-2 text-[#005DA6] font-semibold hover:text-[#00457C]">
+            <Link
+            href="/tracking"
+            className="inline-flex items-center gap-2 text-[#005DA6] font-semibold hover:text-[#00457C]">
               Lacak Status Permintaan →
-            </button>
+            </Link>
           </div>
         </div>
       </div>

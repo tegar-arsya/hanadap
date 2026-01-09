@@ -60,7 +60,7 @@ export default function Home() {
             </div>
 
             <h1 className="text-5xl md:text-7xl font-extrabold text-gray-900 tracking-tight leading-[1.1] mb-6">
-              Kelola Inventaris BPS <br />
+              Kelola Inventaris BARANGMU <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#005DA6] to-[#0096C7]">
                 Lebih Cerdas & Efisien
               </span>
@@ -182,7 +182,7 @@ export default function Home() {
           <div className="relative z-10">
             <h2 className="text-3xl md:text-5xl font-bold mb-6">Siap Mengoptimalkan Kinerja?</h2>
             <p className="text-blue-100 text-lg md:text-xl max-w-2xl mx-auto mb-10">
-              Bergabunglah dengan transformasi digital BPS. Mulai kelola permintaan dan stok barang dengan cara yang lebih modern.
+              Bergabunglah dengan transformasi digital BARANGMU. Mulai kelola permintaan dan stok barang dengan cara yang lebih modern.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link

@@ -73,7 +73,7 @@ export default function LoginPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Kedinasan</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <FiMail className="w-5 h-5 text-gray-400 group-focus-within:text-[#005DA6] transition-colors" />
@@ -82,7 +82,7 @@ export default function LoginPage() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="nama@bps.go.id"
+                    placeholder="email@example.com"
                     required
                     className="block w-full pl-11 pr-4 py-3.5 bg-gray-50 border-gray-200 border rounded-xl text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-[#005DA6] focus:ring-1 focus:ring-[#005DA6] focus:bg-white transition-all"
                   />

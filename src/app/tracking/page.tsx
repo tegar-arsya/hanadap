@@ -225,7 +225,7 @@ function TrackingContent() {
                   <div className="flex gap-3">
                     <input
                       type="email"
-                      placeholder="nama@bps.go.id"
+                      placeholder="email@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#005DA6] focus:border-transparent"
