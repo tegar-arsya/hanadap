@@ -1,7 +1,6 @@
 "use client";
 
 import { ChakraProvider, createSystem, defaultConfig } from "@chakra-ui/react";
-import { ThemeProvider } from "next-themes";
 import { SessionProvider } from "next-auth/react";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -33,12 +32,10 @@ const system = createSystem(defaultConfig, {
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <SessionProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                <ChakraProvider value={system}>
-                    {children}
-                    <Toaster />
-                </ChakraProvider>
-            </ThemeProvider>
+            <ChakraProvider value={system}>
+                {children}
+                <Toaster />
+            </ChakraProvider>
         </SessionProvider>
     );
 }

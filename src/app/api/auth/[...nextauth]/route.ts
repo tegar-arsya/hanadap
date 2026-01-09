@@ -25,6 +25,11 @@ export const authOptions: NextAuthOptions = {
                     throw new Error("Email tidak ditemukan");
                 }
 
+                // Only allow admin to login
+                if (user.role !== "ADMIN") {
+                    throw new Error("Anda bukan admin. Hanya admin yang dapat login.");
+                }
+
                 const isValid = await bcrypt.compare(
                     credentials.password,
                     user.password

@@ -71,7 +71,7 @@ export default function AdminUnitKerjaPage() {
     return (
         <Box>
             <HStack justify="space-between" mb={8} flexWrap="wrap" gap={4}>
-                <PageHeader title="Unit Kerja" subtitle="Kelola departemen dan quota" />
+                <PageHeader title="Unit Kerja" />
                 <PrimaryButton onClick={() => setIsOpen(true)}>
                     <FiPlus />
                     Tambah Unit
@@ -136,11 +136,11 @@ export default function AdminUnitKerjaPage() {
                             <VStack gap={4}>
                                 <Field.Root required>
                                     <Field.Label style={{ color: "var(--foreground)" }}>Nama</Field.Label>
-                                    <StyledInput value={nama} onChange={(e) => setNama(e.target.value)} placeholder="IT Department" />
+                                    <StyledInput value={nama} onChange={(value) => setNama(value)} placeholder="IT Department" />
                                 </Field.Root>
                                 <Field.Root required>
                                     <Field.Label style={{ color: "var(--foreground)" }}>Kode</Field.Label>
-                                    <StyledInput value={kode} onChange={(e) => setKode(e.target.value)} placeholder="IT" />
+                                    <StyledInput value={kode} onChange={(value) => setKode(value)} placeholder="IT" />
                                 </Field.Root>
                                 <Field.Root>
                                     <Field.Label style={{ color: "var(--foreground)" }}>Quota Bulanan</Field.Label>
