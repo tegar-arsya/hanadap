@@ -4,195 +4,222 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
-    Box,
-    Button,
-    Container,
-    Field,
-    Heading,
-    Input,
-    Text,
-    VStack,
-    Alert,
-    HStack,
+  Box,
+  Button,
+  Container,
+  Field,
+  Heading,
+  Input,
+  Text,
+  VStack,
+  Alert,
+  HStack,
+  Flex,
+  Icon,
+  Separator
 } from "@chakra-ui/react";
-import { FiMail, FiLock, FiLogIn } from "react-icons/fi";
+import { FiMail, FiLock, FiLogIn, FiGrid } from "react-icons/fi";
 
 export default function LoginPage() {
-    const router = useRouter();
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
-        setLoading(true);
+  // Warna BPS
+  const BPS_BLUE = "#005DA6";
+  const BPS_ORANGE = "#F7931E";
 
-        try {
-            const result = await signIn("credentials", {
-                email,
-                password,
-                redirect: false,
-            });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-            if (result?.error) {
-                setError("Email atau password salah");
-            } else {
-                // Redirect ke dashboard, middleware akan handle role-based redirect
-                router.push("/dashboard");
-                router.refresh();
-            }
-        } catch {
-            setError("Terjadi kesalahan");
-        } finally {
-            setLoading(false);
-        }
-    };
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    return (
-        <Box
-            minH="100vh"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            bg="var(--background)"
-            p={4}
-        >
-            <Container maxW="sm">
-                <VStack gap={8}>
-                    {/* Logo Section */}
-                    <VStack gap={2} textAlign="center">
-                        <Box
-                            w={16}
-                            h={16}
-                            borderRadius="2xl"
-                            bg="var(--active-color-admin)"
-                            display="flex"
-                            alignItems="center"
-                            justifyContent="center"
-                            mb={2}
-                        >
-                            <Text fontSize="2xl" fontWeight="bold" color="white">
-                                H
-                            </Text>
-                        </Box>
-                        <Heading color="var(--foreground)" size="xl" fontWeight="bold">
-                            Hanadap
-                        </Heading>
-                        <Text color="var(--sidebar-text-muted)" fontSize="md">
-                            Sistem Inventori FIFO
-                        </Text>
-                    </VStack>
+      if (result?.error) {
+        setError("Email atau password tidak valid.");
+      } else {
+        router.push("/dashboard"); // Middleware akan handle redirect user/admin
+        router.refresh();
+      }
+    } catch {
+      setError("Terjadi kesalahan koneksi server.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                    {/* Login Card */}
-                    <Box
-                        w="full"
-                        bg="var(--card-bg)"
-                        borderRadius="2xl"
-                        border="1px solid"
-                        borderColor="var(--card-border)"
-                        boxShadow="var(--card-shadow)"
-                        p={8}
-                    >
-                        <form onSubmit={handleSubmit}>
-                            <VStack gap={5}>
-                                <VStack gap={1} w="full" textAlign="center">
-                                    <Heading size="md" color="var(--foreground)">
-                                        Selamat Datang
-                                    </Heading>
-                                    <Text fontSize="sm" color="var(--sidebar-text-muted)">
-                                        Masuk ke akun Anda
-                                    </Text>
-                                </VStack>
+  return (
+    <Flex
+      minH="100vh"
+      align="center"
+      justify="center"
+      bg="gray.50"
+      position="relative"
+      overflow="hidden"
+    >
+      {/* Background Decoration (Dot Pattern) */}
+      <Box
+        position="absolute"
+        top={0} left={0} right={0} bottom={0}
+        opacity={0.4}
+        backgroundImage="radial-gradient(#CBD5E0 1px, transparent 1px)"
+        backgroundSize="24px 24px"
+        zIndex={0}
+      />
 
-                                {error && (
-                                    <Alert.Root status="error" borderRadius="lg" bg="var(--stat-red-bg)">
-                                        <Alert.Indicator color="var(--stat-red-color)" />
-                                        <Alert.Content color="var(--stat-red-color)">{error}</Alert.Content>
-                                    </Alert.Root>
-                                )}
+      <Container maxW="sm" position="relative" zIndex={1}>
+        <VStack gap={8}>
+          
+          {/* Logo & Header */}
+          <VStack gap={4} textAlign="center">
+            <Flex
+              w={16} h={16}
+              bg={BPS_BLUE}
+              borderRadius="xl"
+              align="center"
+              justify="center"
+              color="white"
+              boxShadow="lg"
+            >
+              <Icon as={FiGrid} boxSize={8} />
+            </Flex>
+            <VStack gap={0}>
+              <Heading size="xl" fontWeight="800" color="gray.800">
+                HANADAP
+              </Heading>
+              <Text color="gray.500" fontSize="md" fontWeight="medium">
+                Sistem Logistik Badan Pusat Statistik
+              </Text>
+            </VStack>
+          </VStack>
 
-                                <Field.Root required w="full">
-                                    <Field.Label color="var(--foreground)" fontSize="sm" fontWeight="medium">
-                                        Email
-                                    </Field.Label>
-                                    <HStack
-                                        w="full"
-                                        bg="var(--input-bg)"
-                                        border="1px solid"
-                                        borderColor="var(--input-border)"
-                                        borderRadius="lg"
-                                        px={3}
-                                        _focusWithin={{
-                                            borderColor: "var(--input-focus-border)",
-                                            boxShadow: "0 0 0 1px var(--input-focus-border)",
-                                        }}
-                                    >
-                                        <FiMail color="var(--sidebar-text-muted)" />
-                                        <Input
-                                            type="email"
-                                            value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="email@example.com"
-                                            py={3}
-                                            color="var(--foreground)"
-                                            _placeholder={{ color: "var(--sidebar-text-muted)" }}
-                                        />
-                                    </HStack>
-                                </Field.Root>
-
-                                <Field.Root required w="full">
-                                    <Field.Label color="var(--foreground)" fontSize="sm" fontWeight="medium">
-                                        Password
-                                    </Field.Label>
-                                    <HStack
-                                        w="full"
-                                        bg="var(--input-bg)"
-                                        border="1px solid"
-                                        borderColor="var(--input-border)"
-                                        borderRadius="lg"
-                                        px={3}
-                                        _focusWithin={{
-                                            borderColor: "var(--input-focus-border)",
-                                            boxShadow: "0 0 0 1px var(--input-focus-border)",
-                                        }}
-                                    >
-                                        <FiLock color="var(--sidebar-text-muted)" />
-                                        <Input
-                                            type="password"
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            placeholder="••••••••"
-                                            py={3}
-                                            color="var(--foreground)"
-                                            _placeholder={{ color: "var(--sidebar-text-muted)" }}
-                                        />
-                                    </HStack>
-                                </Field.Root>
-
-                                <Button
-                                    type="submit"
-                                    colorPalette="blue"
-                                    size="lg"
-                                    w="full"
-                                    loading={loading}
-                                    loadingText="Masuk..."
-                                    borderRadius="lg"
-                                    fontWeight="medium"
-                                >
-                                    <FiLogIn />
-                                    Masuk
-                                </Button>
-                            </VStack>
-                        </form>
-                    </Box>
-
-                    <Text fontSize="sm" color="var(--sidebar-text-muted)">
-                        © 2026 Hanadap. All rights reserved.
-                    </Text>
+          {/* Login Card */}
+          <Box
+            w="full"
+            bg="white"
+            borderRadius="2xl"
+            boxShadow="xl"
+            p={8}
+            border="1px solid"
+            borderColor="gray.100"
+          >
+            <form onSubmit={handleSubmit}>
+              <VStack gap={6}>
+                <VStack gap={1} w="full" align="start">
+                  <Heading size="sm" color="gray.700">Login Akun</Heading>
+                  <Text fontSize="sm" color="gray.500">Masuk untuk mengelola inventaris.</Text>
                 </VStack>
-            </Container>
-        </Box>
-    );
+
+                {error && (
+                  <Alert.Root status="error" variant="subtle" borderRadius="md">
+                    <Alert.Indicator />
+                    <Alert.Content>
+                      <Alert.Title fontSize="sm">Gagal Masuk</Alert.Title>
+                      <Alert.Description fontSize="xs">{error}</Alert.Description>
+                    </Alert.Content>
+                  </Alert.Root>
+                )}
+
+                <VStack gap={4} w="full">
+                  <Field.Root required>
+                    <Field.Label fontSize="sm" fontWeight="medium" color="gray.600">
+                        Email Kedinasan
+                    </Field.Label>
+                    <HStack
+                      w="full"
+                      bg="gray.50"
+                      border="1px solid"
+                      borderColor="gray.200"
+                      borderRadius="lg"
+                      px={3}
+                      transition="all 0.2s"
+                      _focusWithin={{
+                        borderColor: BPS_BLUE,
+                        boxShadow: `0 0 0 1px ${BPS_BLUE}`,
+                        bg: "white"
+                      }}
+                    >
+                      <Icon as={FiMail} color="gray.400" />
+                      <Input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="nama@bps.go.id"
+                        py={3}
+                        px={2}
+                        color="gray.800"
+                      />
+                    </HStack>
+                  </Field.Root>
+
+                  <Field.Root required>
+                    <Flex justify="space-between" w="full">
+                       <Field.Label fontSize="sm" fontWeight="medium" color="gray.600">Password</Field.Label>
+                    </Flex>
+                    <HStack
+                      w="full"
+                      bg="gray.50"
+                      border="1px solid"
+                      borderColor="gray.200"
+                      borderRadius="lg"
+                      px={3}
+                      transition="all 0.2s"
+                      _focusWithin={{
+                        borderColor: BPS_BLUE,
+                        boxShadow: `0 0 0 1px ${BPS_BLUE}`,
+                        bg: "white"
+                      }}
+                    >
+                      <Icon as={FiLock} color="gray.400" />
+                      <Input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        py={3}
+                        px={2}
+                        color="gray.800"
+                      />
+                    </HStack>
+                  </Field.Root>
+                </VStack>
+
+                <Button
+                  type="submit"
+                  bg={BPS_BLUE}
+                  color="white"
+                  size="lg"
+                  w="full"
+                  mt={2}
+                  loading={loading}
+                  loadingText="Memverifikasi..."
+                  _hover={{ bg: "#00457C" }}
+                  borderRadius="lg"
+                  fontWeight="bold"
+                >
+                  <FiLogIn style={{ marginRight: "8px" }} />
+                  Masuk
+                </Button>
+              </VStack>
+            </form>
+          </Box>
+
+          {/* Footer */}
+          <Text fontSize="xs" color="gray.400" textAlign="center">
+            &copy; {new Date().getFullYear()} Badan Pusat Statistik.<br/>
+            All rights reserved.
+          </Text>
+
+        </VStack>
+      </Container>
+    </Flex>
+  );
 }
