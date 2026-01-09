@@ -62,21 +62,40 @@ export async function kurangiStokFIFO(
 
 /**
  * Tambah stok baru (buat batch baru)
+ * @param barangId - ID barang
+ * @param jumlah - Jumlah barang masuk
+ * @param options - Opsi tambahan (tanggalMasuk, hargaSatuan, jenisTransaksi, keterangan, tanggalExpiry)
  */
 export async function tambahStok(
     barangId: string,
     jumlah: number,
-    tanggalMasuk?: Date,
-    hargaSatuan?: number
+    options?: {
+        tanggalMasuk?: Date;
+        hargaSatuan?: number;
+        jenisTransaksi?: string;
+        keterangan?: string;
+        tanggalExpiry?: Date;
+    }
 ): Promise<void> {
+    const {
+        tanggalMasuk = new Date(),
+        hargaSatuan = 0,
+        jenisTransaksi = "PEMBELIAN",
+        keterangan,
+        tanggalExpiry,
+    } = options || {};
+
     // Buat batch baru
     await prisma.stockBatch.create({
         data: {
             barangId,
             jumlah,
             sisaJumlah: jumlah,
-            tanggalMasuk: tanggalMasuk || new Date(),
-            hargaSatuan: hargaSatuan || 0,
+            tanggalMasuk,
+            hargaSatuan,
+            jenisTransaksi,
+            keterangan,
+            tanggalExpiry,
         },
     });
 

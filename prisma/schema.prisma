@@ -83,21 +83,26 @@ model Barang {
 // StockBatch - Untuk tracking FIFO
 // Setiap kali barang masuk, buat batch baru
 // ============================================
+// Jenis Transaksi MASUK: PEMBELIAN | HIBAH | TRANSFER_MASUK | SALDO_AWAL | KOREKSI_TAMBAH
+// Jenis Transaksi KELUAR: PERMINTAAN | TRANSFER_KELUAR | RUSAK | KOREKSI_KURANG | RETURN
 model StockBatch {
-  id            String    @id @default(cuid())
-  barangId      String
-  jumlah        Int       // Jumlah awal saat masuk
-  sisaJumlah    Int       // Sisa yang belum terpakai (untuk FIFO)
-  hargaSatuan   Int       @default(0) // Harga per satuan saat batch masuk
-  tanggalMasuk  DateTime  @default(now())
-  tanggalExpiry DateTime? // Untuk barang yang punya masa kadaluarsa
-  createdAt     DateTime  @default(now())
+  id              String    @id @default(cuid())
+  barangId        String
+  jumlah          Int       // Jumlah awal saat masuk
+  sisaJumlah      Int       // Sisa yang belum terpakai (untuk FIFO)
+  hargaSatuan     Int       @default(0) // Harga per satuan saat batch masuk
+  jenisTransaksi  String    @default("PEMBELIAN") // PEMBELIAN | HIBAH | TRANSFER_MASUK | SALDO_AWAL | KOREKSI_TAMBAH
+  keterangan      String?   // Catatan tambahan
+  tanggalMasuk    DateTime  @default(now())
+  tanggalExpiry   DateTime? // Untuk barang yang punya masa kadaluarsa
+  createdAt       DateTime  @default(now())
 
   // Relations
   barang Barang @relation(fields: [barangId], references: [id], onDelete: Cascade)
 
   @@index([barangId, tanggalMasuk])
   @@index([tanggalExpiry])
+  @@index([jenisTransaksi])
 }
 
 // ============================================

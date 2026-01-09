@@ -46,6 +46,8 @@ export default function PublicRequestPage() {
   const [emailPemohon, setEmailPemohon] = useState("");
   const [unitKerjaId, setUnitKerjaId] = useState("");
 
+  const selectedBarangData = barangList.find((b) => b.id === selectedBarang);
+
   const showToast = (title: string, type: "success" | "error" | "warning") => {
     toaster.create({ title, type });
   };
@@ -248,15 +250,20 @@ export default function PublicRequestPage() {
                   </select>
                 </div>
 
-                <div className="w-full lg:w-[140px]">
+                <div className="w-full lg:w-[160px]">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Jumlah</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={jumlah}
-                    onChange={(e) => setJumlah(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#005DA6] focus:ring-2 focus:ring-[#005DA6]/30 transition bg-white"
-                  />
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={1}
+                      value={jumlah}
+                      onChange={(e) => setJumlah(e.target.value)}
+                      className="w-full px-4 py-3 pr-16 rounded-lg border border-gray-200 focus:border-[#005DA6] focus:ring-2 focus:ring-[#005DA6]/30 transition bg-white"
+                    />
+                    <span className="absolute inset-y-0 right-4 flex items-center text-sm font-semibold text-gray-500">
+                      {selectedBarangData?.satuan || "satuan"}
+                    </span>
+                  </div>
                 </div>
 
                 <button
@@ -293,7 +300,6 @@ export default function PublicRequestPage() {
                       <tr className="text-left text-gray-700 font-semibold">
                         <th className="py-4 px-6">Nama Barang</th>
                         <th className="py-4 px-6 text-center">Jumlah</th>
-                        <th className="py-4 px-6">Satuan</th>
                         <th className="py-4 px-6 w-16" />
                       </tr>
                     </thead>
@@ -310,10 +316,9 @@ export default function PublicRequestPage() {
                           </td>
                           <td className="py-4 px-6 text-center">
                             <span className="inline-flex px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
-                              {item.jumlah}
+                              {item.jumlah} {item.barang.satuan}
                             </span>
                           </td>
-                          <td className="py-4 px-6 text-gray-600">{item.barang.satuan}</td>
                           <td className="py-4 px-6">
                             <button
                               onClick={() => handleRemoveItem(item.barangId)}

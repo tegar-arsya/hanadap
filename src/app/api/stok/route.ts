@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body = await request.json();
-        const { barangId, jumlah, tanggalMasuk, hargaSatuan } = body;
+        const { barangId, jumlah, tanggalMasuk, hargaSatuan, jenisTransaksi, keterangan } = body;
 
         if (!barangId || !jumlah || jumlah <= 0) {
             return NextResponse.json(
@@ -48,12 +48,12 @@ export async function POST(request: NextRequest) {
         }
 
         // Tambah stok menggunakan FIFO logic
-        await tambahStok(
-            barangId,
-            jumlah,
-            tanggalMasuk ? new Date(tanggalMasuk) : undefined,
-            harga
-        );
+        await tambahStok(barangId, jumlah, {
+            tanggalMasuk: tanggalMasuk ? new Date(tanggalMasuk) : undefined,
+            hargaSatuan: harga,
+            jenisTransaksi: jenisTransaksi || "PEMBELIAN",
+            keterangan: keterangan || undefined,
+        });
 
         // Log activity
         await logActivity({

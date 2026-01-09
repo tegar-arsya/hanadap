@@ -16,7 +16,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans selection:bg-[#005DA6] selection:text-white overflow-hidden">
+    <div className="min-h-screen bg-slate-50 font-sans selection:bg-blue-600 selection:text-white overflow-hidden">
 
       {/* --- NAVBAR --- */}
       <nav
@@ -25,7 +25,7 @@ export default function Home() {
       >
         <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#005DA6] to-[#00457C] rounded-xl shadow-lg shadow-blue-500/20 flex items-center justify-center text-white font-bold text-xl">H</div>
+            <div className="w-10 h-10 bg-linear-to-br from-blue-400 to-blue-500 rounded-xl shadow-lg shadow-blue-500/20 flex items-center justify-center text-white font-bold text-xl">H</div>
             <span className={`text-xl font-bold tracking-tight ${scrolled ? "text-gray-900" : "text-gray-900"}`}>Hanadap</span>
           </div>
           <div className="flex items-center gap-4">
@@ -91,8 +91,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* --- STATS / CLIENTS BAR --- */}
-      <section className="border-y border-gray-200 bg-white/50 backdrop-blur-sm -mt-8 relative z-20">
+      
+      {/* <section className="border-y border-gray-200 bg-white/50 backdrop-blur-sm -mt-8 relative z-20">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             {[
@@ -108,10 +108,10 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
-      {/* --- FEATURES GRID --- */}
-      <section className="py-24 bg-white relative">
+      
+      {/* <section className="py-24 bg-white relative">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Fitur Unggulan</h2>
@@ -170,12 +170,12 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
-      {/* --- CTA SECTION --- */}
-      <section className="py-24 px-6">
+      
+      {/* <section className="py-24 px-6">
         <div className="max-w-5xl mx-auto bg-gradient-to-br from-[#005DA6] to-[#003366] rounded-3xl p-12 md:p-16 text-center text-white relative overflow-hidden shadow-2xl">
-          {/* Decorative Circles */}
+          
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
 
@@ -200,7 +200,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* --- FOOTER --- */}
       <footer className="bg-white border-t border-gray-100 py-12 px-6">
@@ -210,7 +210,7 @@ export default function Home() {
             <span className="font-bold text-gray-900">Hanadap</span>
           </div>
           <p className="text-gray-500 text-sm">
-            &copy; {new Date().getFullYear()} Badan Pusat Statistik. Internal Use Only.
+            &copy; {new Date().getFullYear()} Hana Corp. Internal Use Only.
           </p>
         </div>
       </footer>
@@ -219,10 +219,10 @@ export default function Home() {
 }
 
 // Icons helper component (since we used some not imported yet)
-function FiCheckingBox(props: any) {
-  return <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" {...props}><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>;
-}
+// function FiCheckingBox(props: any) {
+//   return <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" {...props}><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>;
+// }
 
-function FiUsers(props: any) {
-  return <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" {...props}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
-}
+// function FiUsers(props: any) {
+//   return <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" {...props}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
+// }
