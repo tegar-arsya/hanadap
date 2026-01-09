@@ -1,23 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-    Box,
-    VStack,
-    HStack,
-    Button,
-    Input,
-    Table,
-    Badge,
-    IconButton,
-    Dialog,
-    Field,
-    NumberInput,
-    Text,
-} from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
 import { FiPlus, FiTrash2 } from "react-icons/fi";
-import { PageHeader, Card, PrimaryButton, StyledInput } from "@/components/ui/shared";
+import { PageHeader, Card, PrimaryButton, StyledInput, Modal } from "@/components/ui/shared";
 
 interface UnitKerja {
     id: string;
@@ -36,10 +22,6 @@ export default function AdminUnitKerjaPage() {
     const [kode, setKode] = useState("");
     const [quota, setQuota] = useState("100");
 
-    const showToast = (title: string, type: "success" | "info") => {
-        toaster.create({ title, type });
-    };
-
     const fetchData = async () => {
         const res = await fetch("/api/unit-kerja");
         setUnitList(await res.json());
@@ -55,7 +37,7 @@ export default function AdminUnitKerjaPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ nama, kode, quotaBulanan: parseInt(quota) }),
         });
-        showToast("Unit Kerja ditambahkan", "success");
+        toaster.create({ title: "Unit Kerja ditambahkan", type: "success" });
         setNama(""); setKode(""); setQuota("100");
         setIsOpen(false);
         fetchData();
@@ -64,112 +46,130 @@ export default function AdminUnitKerjaPage() {
     const handleDelete = async (id: string) => {
         if (!confirm("Yakin ingin menghapus?")) return;
         await fetch(`/api/unit-kerja/${id}`, { method: "DELETE" });
-        showToast("Unit Kerja dihapus", "info");
+        toaster.create({ title: "Unit Kerja dihapus", type: "info" });
         fetchData();
     };
 
     return (
-        <Box>
-            <HStack justify="space-between" mb={8} flexWrap="wrap" gap={4}>
+        <div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
                 <PageHeader title="Unit Kerja" />
-                <PrimaryButton onClick={() => setIsOpen(true)}>
-                    <FiPlus />
+                <PrimaryButton onClick={() => setIsOpen(true)} icon={FiPlus}>
                     Tambah Unit
                 </PrimaryButton>
-            </HStack>
+            </div>
 
             <Card>
-                <Box overflowX="auto">
-                    <Table.Root>
-                        <Table.Header>
-                            <Table.Row style={{ background: "var(--table-header-bg)" }}>
-                                <Table.ColumnHeader style={{ color: "var(--foreground)" }}>Nama Unit</Table.ColumnHeader>
-                                <Table.ColumnHeader style={{ color: "var(--foreground)" }}>Kode</Table.ColumnHeader>
-                                <Table.ColumnHeader textAlign="right" style={{ color: "var(--foreground)" }}>Quota/Bulan</Table.ColumnHeader>
-                                <Table.ColumnHeader textAlign="right" style={{ color: "var(--foreground)" }}>Anggota</Table.ColumnHeader>
-                                <Table.ColumnHeader w="100px" style={{ color: "var(--foreground)" }}>Aksi</Table.ColumnHeader>
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            {unitList.map((unit) => (
-                                <Table.Row key={unit.id} style={{ borderColor: "var(--card-border)" }}>
-                                    <Table.Cell fontWeight="medium" style={{ color: "var(--foreground)" }}>{unit.nama}</Table.Cell>
-                                    <Table.Cell>
-                                        <Badge
-                                            style={{
-                                                background: "var(--stat-blue-bg)",
-                                                color: "var(--stat-blue-color)",
-                                            }}
-                                        >
-                                            {unit.kode}
-                                        </Badge>
-                                    </Table.Cell>
-                                    <Table.Cell textAlign="right" style={{ color: "var(--foreground)" }}>{unit.quotaBulanan}</Table.Cell>
-                                    <Table.Cell textAlign="right" style={{ color: "var(--foreground)" }}>{unit._count?.users || 0}</Table.Cell>
-                                    <Table.Cell>
-                                        <IconButton
-                                            aria-label="Delete"
-                                            size="sm"
-                                            variant="ghost"
-                                            onClick={() => handleDelete(unit.id)}
-                                            style={{ color: "var(--stat-red-color)" }}
-                                        >
-                                            <FiTrash2 />
-                                        </IconButton>
-                                    </Table.Cell>
-                                </Table.Row>
-                            ))}
-                        </Table.Body>
-                    </Table.Root>
-                </Box>
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Nama Unit</th>
+                                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">Kode</th>
+                                <th className="text-right px-4 py-3 text-sm font-semibold text-gray-600">Quota/Bulan</th>
+                                <th className="text-right px-4 py-3 text-sm font-semibold text-gray-600">Anggota</th>
+                                <th className="w-24 px-4 py-3 text-sm font-semibold text-gray-600">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} className="text-center py-12 text-gray-500">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <svg className="animate-spin h-5 w-5 text-[#005DA6]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span>Memuat data...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : unitList.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="text-center py-12 text-gray-500">
+                                        Belum ada data unit kerja.
+                                    </td>
+                                </tr>
+                            ) : (
+                                unitList.map((unit, index) => (
+                                    <tr key={unit.id} className={`hover:bg-gray-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                                        <td className="px-4 py-3 font-medium text-gray-800">{unit.nama}</td>
+                                        <td className="px-4 py-3">
+                                            <span className="inline-flex px-2.5 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded-full">
+                                                {unit.kode}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-gray-600">{unit.quotaBulanan}</td>
+                                        <td className="px-4 py-3 text-right text-gray-600">{unit._count?.users || 0}</td>
+                                        <td className="px-4 py-3">
+                                            <button
+                                                onClick={() => handleDelete(unit.id)}
+                                                className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                                                title="Hapus"
+                                            >
+                                                <FiTrash2 className="w-4 h-4" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </Card>
 
-            <Dialog.Root open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
-                <Dialog.Backdrop />
-                <Dialog.Positioner>
-                    <Dialog.Content style={{ background: "var(--card-bg)", borderColor: "var(--card-border)" }}>
-                        <Dialog.Header style={{ borderColor: "var(--card-border)" }}>
-                            <Dialog.Title style={{ color: "var(--foreground)" }}>Tambah Unit Kerja</Dialog.Title>
-                            <Dialog.CloseTrigger />
-                        </Dialog.Header>
-                        <Dialog.Body>
-                            <VStack gap={4}>
-                                <Field.Root required>
-                                    <Field.Label style={{ color: "var(--foreground)" }}>Nama</Field.Label>
-                                    <StyledInput value={nama} onChange={(value) => setNama(value)} placeholder="IT Department" />
-                                </Field.Root>
-                                <Field.Root required>
-                                    <Field.Label style={{ color: "var(--foreground)" }}>Kode</Field.Label>
-                                    <StyledInput value={kode} onChange={(value) => setKode(value)} placeholder="IT" />
-                                </Field.Root>
-                                <Field.Root>
-                                    <Field.Label style={{ color: "var(--foreground)" }}>Quota Bulanan</Field.Label>
-                                    <NumberInput.Root value={quota} onValueChange={(e) => setQuota(e.value)} min={1}>
-                                        <NumberInput.Input
-                                            style={{
-                                                background: "var(--input-bg)",
-                                                borderColor: "var(--input-border)",
-                                                color: "var(--foreground)",
-                                            }}
-                                        />
-                                    </NumberInput.Root>
-                                </Field.Root>
-                            </VStack>
-                        </Dialog.Body>
-                        <Dialog.Footer style={{ borderColor: "var(--card-border)" }}>
-                            <Button
-                                variant="ghost"
-                                mr={3}
-                                onClick={() => setIsOpen(false)}
-                                style={{ color: "var(--foreground)" }}
-                            >
-                                Batal
-                            </Button>
-                            <PrimaryButton onClick={handleAdd}>Simpan</PrimaryButton>
-                        </Dialog.Footer>
-                    </Dialog.Content>
-                </Dialog.Positioner>
-            </Dialog.Root>
-        </Box>
+            {/* Modal Tambah Unit */}
+            <Modal
+                isOpen={isOpen}
+                onClose={() => setIsOpen(false)}
+                title="Tambah Unit Kerja"
+                footer={
+                    <>
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                            Batal
+                        </button>
+                        <PrimaryButton onClick={handleAdd}>Simpan</PrimaryButton>
+                    </>
+                }
+            >
+                <div className="flex flex-col gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                            Nama <span className="text-red-500">*</span>
+                        </label>
+                        <StyledInput
+                            value={nama}
+                            onChange={setNama}
+                            placeholder="IT Department"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                            Kode <span className="text-red-500">*</span>
+                        </label>
+                        <StyledInput
+                            value={kode}
+                            onChange={setKode}
+                            placeholder="IT"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                            Quota Bulanan
+                        </label>
+                        <input
+                            type="number"
+                            value={quota}
+                            onChange={(e) => setQuota(e.target.value)}
+                            min={1}
+                            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#005DA6] focus:border-transparent text-sm"
+                        />
+                    </div>
+                </div>
+            </Modal>
+        </div>
     );
 }

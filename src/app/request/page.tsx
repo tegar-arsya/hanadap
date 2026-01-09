@@ -1,37 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  Box,
-  VStack,
-  HStack,
-  Button,
-  NativeSelect,
-  NumberInput,
-  Textarea,
-  Table,
-  IconButton,
-  Field,
-  Input,
-  Text,
-  Heading,
-  Container,
-  Badge,
-  Separator,
-  Flex,
-  Stack,
-} from "@chakra-ui/react";
+import { useEffect, useState } from "react";
+import { FiPlus, FiTrash2, FiSend, FiPackage, FiUser, FiInfo, FiGrid } from "react-icons/fi";
 import { toaster } from "@/components/ui/toaster";
-import { FiPlus, FiTrash2, FiSend, FiPackage, FiUser, FiInfo, FiGrid, FiArrowLeft, FiCheckCircle } from "react-icons/fi";
-
-const BPS = {
-  blue: "#005DA6",
-  darkBlue: "#00457C",
-  orange: "#F7931E",
-  green: "#8CC63F",
-  grayBg: "#F4F7FE",
-  border: "#E2E8F0",
-};
 
 interface Barang {
   id: string;
@@ -51,6 +22,15 @@ interface RequestItem {
   barang: Barang;
   jumlah: number;
 }
+
+const BPS = {
+  blue: "#005DA6",
+  darkBlue: "#00457C",
+  orange: "#F7931E",
+  green: "#8CC63F",
+  grayBg: "#F4F7FE",
+  border: "#E2E8F0",
+};
 
 export default function PublicRequestPage() {
   const [barangList, setBarangList] = useState<Barang[]>([]);
@@ -136,7 +116,7 @@ export default function PublicRequestPage() {
         const error = await res.json();
         showToast(error.error || "Gagal mengajukan permintaan", "error");
       }
-    } catch (error) {
+    } catch {
       showToast("Terjadi kesalahan jaringan", "error");
     } finally {
       setLoading(false);
@@ -144,460 +124,266 @@ export default function PublicRequestPage() {
   };
 
   return (
-    <Box minH="100vh" bg={BPS.grayBg} position="relative">
+    <div className="min-h-screen bg-[#F4F7FE] relative">
       {/* Background Header */}
-      <Box 
-        position="absolute" 
-        top={0} 
-        left={0} 
-        right={0} 
-        h={{ base: "240px", md: "280px" }}
-        bg={`linear-gradient(135deg, ${BPS.blue} 0%, ${BPS.darkBlue} 100%)`}
-        zIndex={0}
+      <div
+        className="absolute inset-x-0 top-0"
+        style={{
+          height: "280px",
+          background: `linear-gradient(135deg, ${BPS.blue} 0%, ${BPS.darkBlue} 100%)`,
+          zIndex: 0,
+        }}
       >
-        <Box 
-          position="absolute" 
-          bottom={0} 
-          left={0} 
-          right={0} 
-          h="60px" 
-          bg={BPS.grayBg}
-          borderTopRadius="3xl"
-        />
-      </Box>
+        <div className="absolute bottom-0 inset-x-0 h-[60px] bg-[#F4F7FE] rounded-t-3xl" />
+      </div>
 
-      <Container maxW="container.lg" position="relative" zIndex={1} py={{ base: 6, md: 10 }}>
-        <VStack gap={8} align="stretch">
-          
+      <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-6 py-10">
+        <div className="flex flex-col gap-8">
           {/* HEADER */}
-          <Box color="white" pt={4}>
-            <HStack 
-              color="whiteAlpha.900" 
-              mb={6}
-              cursor="pointer"
-              transition="all 0.2s"
-              _hover={{ color: "white", transform: "translateX(-4px)" }}
-            >
-              <FiArrowLeft size={18} />
-              <Text fontSize="sm" fontWeight="medium">Kembali ke Beranda</Text>
-            </HStack>
-            
-            <Flex direction={{ base: "column", md: "row" }} align="start" justify="space-between" gap={6}>
-              <Box flex={1}>
-                <Badge 
-                  bg="whiteAlpha.200" 
-                  color="white" 
-                  px={3} 
-                  py={1.5} 
-                  mb={4}
-                  borderRadius="full"
-                  fontSize="xs"
-                  fontWeight="semibold"
-                  letterSpacing="wide"
-                >
+          <div className="text-white pt-4">
+            <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
+              <div className="flex-1">
+                <span className="inline-flex bg-white/20 text-white px-3 py-1.5 mb-4 rounded-full text-xs font-semibold tracking-wide">
                   FORMULIR DIGITAL 01
-                </Badge>
-                <Heading size={{ base: "xl", md: "2xl" }} fontWeight="bold" mb={3}>
-                  Permintaan Barang
-                </Heading>
-                <Text color="blue.100" fontSize={{ base: "sm", md: "md" }} maxW="2xl" lineHeight="tall">
+                </span>
+                <h1 className="text-3xl md:text-4xl font-bold mb-3">Permintaan Barang</h1>
+                <p className="text-blue-100 text-sm md:text-base leading-relaxed max-w-2xl">
                   Isi formulir di bawah untuk mengajukan kebutuhan ATK atau peralatan kerja unit Anda. Permintaan akan diproses sesuai ketersediaan stok.
-                </Text>
-              </Box>
-              
-              <Box 
-                bg="whiteAlpha.200" 
-                p={5} 
-                borderRadius="2xl" 
-                display={{ base: "none", md: "block" }}
-                backdropFilter="blur(10px)"
-              >
+                </p>
+              </div>
+              <div className="hidden md:block bg-white/20 p-5 rounded-2xl backdrop-blur">
                 <FiPackage size={48} />
-              </Box>
-            </Flex>
-          </Box>
-
-          {/* PROGRESS INDICATOR */}
-          <Box bg="white" borderRadius="xl" p={6} shadow="sm">
-            <HStack gap={4} justify="space-around" flexWrap="wrap">
-              <HStack color={BPS.blue}>
-                <Box bg="blue.50" p={2} borderRadius="lg">
-                  <FiUser size={20} />
-                </Box>
-                <VStack align="start" gap={0}>
-                  <Text fontSize="xs" color="gray.500" fontWeight="medium">Step 1</Text>
-                  <Text fontSize="sm" fontWeight="semibold">Data Pemohon</Text>
-                </VStack>
-              </HStack>
-              
-              <Box h="1px" flex={1} bg="gray.200" display={{ base: "none", md: "block" }} />
-              
-              <HStack color={items.length > 0 ? BPS.blue : "gray.400"}>
-                <Box bg={items.length > 0 ? "blue.50" : "gray.100"} p={2} borderRadius="lg">
-                  <FiGrid size={20} />
-                </Box>
-                <VStack align="start" gap={0}>
-                  <Text fontSize="xs" color="gray.500" fontWeight="medium">Step 2</Text>
-                  <Text fontSize="sm" fontWeight="semibold">Pilih Barang</Text>
-                </VStack>
-              </HStack>
-              
-              <Box h="1px" flex={1} bg="gray.200" display={{ base: "none", md: "block" }} />
-              
-              <HStack color="gray.400">
-                <Box bg="gray.100" p={2} borderRadius="lg">
-                  <FiCheckCircle size={20} />
-                </Box>
-                <VStack align="start" gap={0}>
-                  <Text fontSize="xs" color="gray.500" fontWeight="medium">Step 3</Text>
-                  <Text fontSize="sm" fontWeight="semibold">Konfirmasi</Text>
-                </VStack>
-              </HStack>
-            </HStack>
-          </Box>
+              </div>
+            </div>
+          </div>
 
           {/* MAIN CARD */}
-          <Box bg="white" borderRadius="2xl" shadow="lg" overflow="hidden">
-            
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
             {/* 1. DATA PEMOHON */}
-            <Box p={{ base: 6, md: 8 }}>
-              <HStack mb={6} gap={3}>
-                <Box bg="blue.50" p={2.5} borderRadius="lg">
+            <div className="p-6 md:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="bg-blue-50 p-2.5 rounded-lg">
                   <FiUser size={20} color={BPS.blue} />
-                </Box>
-                <Box>
-                  <Heading size="lg" color="gray.800">Identitas Pemohon</Heading>
-                  <Text fontSize="sm" color="gray.500" mt={1}>Lengkapi informasi diri Anda</Text>
-                </Box>
-              </HStack>
-              
-              <Stack direction={{ base: "column", md: "row" }} gap={6} mb={6}>
-                <Field.Root required flex={1}>
-                  <Field.Label color="gray.700" fontSize="sm" fontWeight="semibold" mb={2}>
-                    Nama Lengkap
-                  </Field.Label>
-                  <Input
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-800">Identitas Pemohon</h2>
+                  <p className="text-sm text-gray-500 mt-1">Lengkapi informasi diri Anda</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-6 mb-6">
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Nama Lengkap</label>
+                  <input
                     value={namaPemohon}
                     onChange={(e) => setNamaPemohon(e.target.value)}
                     placeholder="Contoh: Budi Santoso"
-                    size="lg"
-                    borderRadius="lg"
-                    borderColor={BPS.border}
-                    _focus={{ borderColor: BPS.blue, boxShadow: `0 0 0 1px ${BPS.blue}` }}
-                    _hover={{ borderColor: "gray.300" }}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#005DA6] focus:ring-2 focus:ring-[#005DA6]/30 transition"
                   />
-                </Field.Root>
-
-                <Field.Root required flex={1}>
-                  <Field.Label color="gray.700" fontSize="sm" fontWeight="semibold" mb={2}>
-                    Email Dinas
-                  </Field.Label>
-                  <Input
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Email Dinas</label>
+                  <input
                     type="email"
                     value={emailPemohon}
                     onChange={(e) => setEmailPemohon(e.target.value)}
                     placeholder="email@bps.go.id"
-                    size="lg"
-                    borderRadius="lg"
-                    borderColor={BPS.border}
-                    _focus={{ borderColor: BPS.blue, boxShadow: `0 0 0 1px ${BPS.blue}` }}
-                    _hover={{ borderColor: "gray.300" }}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#005DA6] focus:ring-2 focus:ring-[#005DA6]/30 transition"
                   />
-                </Field.Root>
-              </Stack>
+                </div>
+              </div>
 
-              <Field.Root required>
-                <Field.Label color="gray.700" fontSize="sm" fontWeight="semibold" mb={2}>
-                  Unit Kerja
-                </Field.Label>
-                <NativeSelect.Root size="lg">
-                  <NativeSelect.Field
-                    value={unitKerjaId}
-                    onChange={(e) => setUnitKerjaId(e.target.value)}
-                    placeholder="Pilih unit kerja asal..."
-                    borderRadius="lg"
-                    borderColor={BPS.border}
-                    _focus={{ borderColor: BPS.blue, boxShadow: `0 0 0 1px ${BPS.blue}` }}
-                    _hover={{ borderColor: "gray.300" }}
-                  >
-                    {unitKerjaList.map((uk) => (
-                      <option key={uk.id} value={uk.id}>
-                        {uk.nama} — Kode: {uk.kode}
-                      </option>
-                    ))}
-                  </NativeSelect.Field>
-                </NativeSelect.Root>
-              </Field.Root>
-            </Box>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Unit Kerja</label>
+                <select
+                  value={unitKerjaId}
+                  onChange={(e) => setUnitKerjaId(e.target.value)}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#005DA6] focus:ring-2 focus:ring-[#005DA6]/30 transition bg-white"
+                >
+                  <option value="">Pilih unit kerja asal...</option>
+                  {unitKerjaList.map((uk) => (
+                    <option key={uk.id} value={uk.id}>
+                      {uk.nama} — Kode: {uk.kode}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-            <Separator borderColor={BPS.border} />
+            <div className="border-t border-gray-200" />
 
             {/* 2. INPUT BARANG */}
-            <Box p={{ base: 6, md: 8 }} bg="blue.25">
-              <HStack mb={6} justify="space-between" flexWrap="wrap" gap={4}>
-                <HStack gap={3}>
-                  <Box bg="white" p={2.5} borderRadius="lg" shadow="sm">
+            <div className="p-6 md:p-8 bg-blue-50/50">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="bg-white p-2.5 rounded-lg shadow-sm">
                     <FiGrid size={20} color={BPS.blue} />
-                  </Box>
-                  <Box>
-                    <Heading size="lg" color="gray.800">Pilih Barang</Heading>
-                    <Text fontSize="sm" color="gray.500" mt={1}>Tambahkan item yang dibutuhkan</Text>
-                  </Box>
-                </HStack>
-                <Badge colorPalette="green" variant="solid" px={3} py={1.5} borderRadius="full">
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-800">Pilih Barang</h2>
+                    <p className="text-sm text-gray-500 mt-1">Tambahkan item yang dibutuhkan</p>
+                  </div>
+                </div>
+                <span className="inline-flex items-center text-sm font-semibold text-green-700 bg-green-100 px-3 py-1.5 rounded-full">
                   ✓ Stok Tersedia
-                </Badge>
-              </HStack>
+                </span>
+              </div>
 
-              <Stack direction={{ base: "column", lg: "row" }} gap={4} align="end">
-                <Field.Root flex={3}>
-                  <Field.Label color="gray.700" fontSize="sm" fontWeight="semibold" mb={2}>
-                    Nama Barang
-                  </Field.Label>
-                  <NativeSelect.Root size="lg">
-                    <NativeSelect.Field
-                      bg="white"
-                      value={selectedBarang}
-                      onChange={(e) => setSelectedBarang(e.target.value)}
-                      placeholder="Cari dan pilih barang..."
-                      borderRadius="lg"
-                      borderColor={BPS.border}
-                      _focus={{ borderColor: BPS.blue, boxShadow: `0 0 0 1px ${BPS.blue}` }}
-                    >
-                      {barangList.map((barang) => (
-                        <option key={barang.id} value={barang.id}>
-                          {barang.nama} — Tersedia: {barang.stokTotal} {barang.satuan}
-                        </option>
-                      ))}
-                    </NativeSelect.Field>
-                  </NativeSelect.Root>
-                </Field.Root>
-
-                <Field.Root w={{ base: "full", lg: "140px" }}>
-                  <Field.Label color="gray.700" fontSize="sm" fontWeight="semibold" mb={2}>
-                    Jumlah
-                  </Field.Label>
-                  <NumberInput.Root 
-                    size="lg" 
-                    min={1} 
-                    value={jumlah} 
-                    onValueChange={(e) => setJumlah(e.value)}
+              <div className="flex flex-col lg:flex-row gap-4 items-end">
+                <div className="flex-1">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Nama Barang</label>
+                  <select
+                    value={selectedBarang}
+                    onChange={(e) => setSelectedBarang(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#005DA6] focus:ring-2 focus:ring-[#005DA6]/30 transition bg-white"
                   >
-                    <NumberInput.Input 
-                      bg="white" 
-                      borderRadius="lg"
-                      borderColor={BPS.border}
-                    />
-                    <NumberInput.Control />
-                  </NumberInput.Root>
-                </Field.Root>
+                    <option value="">Cari dan pilih barang...</option>
+                    {barangList.map((barang) => (
+                      <option key={barang.id} value={barang.id}>
+                        {barang.nama} — Tersedia: {barang.stokTotal} {barang.satuan}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <Button
-                  size="lg"
-                  bg={BPS.blue}
-                  color="white"
-                  px={8}
-                  h="48px"
+                <div className="w-full lg:w-[140px]">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Jumlah</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={jumlah}
+                    onChange={(e) => setJumlah(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#005DA6] focus:ring-2 focus:ring-[#005DA6]/30 transition bg-white"
+                  />
+                </div>
+
+                <button
                   onClick={handleAddItem}
                   disabled={!selectedBarang}
-                  borderRadius="lg"
-                  fontWeight="semibold"
-                  _hover={{ bg: BPS.darkBlue, transform: "translateY(-2px)", shadow: "md" }}
-                  _active={{ transform: "translateY(0)" }}
-                  transition="all 0.2s"
-                  w={{ base: "full", lg: "auto" }}
+                  className={`w-full lg:w-auto inline-flex items-center justify-center gap-2 px-6 h-12 rounded-lg font-semibold text-white transition transform ${
+                    selectedBarang
+                      ? "bg-[#005DA6] hover:bg-[#00457C] hover:-translate-y-0.5 shadow-md"
+                      : "bg-gray-300 cursor-not-allowed"
+                  }`}
                 >
-                  <FiPlus style={{ marginRight: "8px" }} />
+                  <FiPlus />
                   Tambahkan
-                </Button>
-              </Stack>
-            </Box>
+                </button>
+              </div>
+            </div>
 
-            <Separator borderColor={BPS.border} />
+            <div className="border-t border-gray-200" />
 
             {/* 3. DAFTAR BARANG */}
-            <Box>
+            <div>
               {items.length === 0 ? (
-                <VStack py={16} color="gray.400" bg="gray.50">
-                  <Box bg="gray.100" p={6} borderRadius="2xl" mb={4}>
-                    <FiPackage size={48} style={{ opacity: 0.5 }} />
-                  </Box>
-                  <Text fontSize="md" fontWeight="medium" color="gray.500">
-                    Belum ada barang yang ditambahkan
-                  </Text>
-                  <Text fontSize="sm" color="gray.400">
-                    Pilih barang di atas untuk menambahkan ke daftar permintaan
-                  </Text>
-                </VStack>
+                <div className="flex flex-col items-center gap-2 py-16 text-gray-500 bg-gray-50">
+                  <div className="bg-gray-100 p-6 rounded-2xl mb-2">
+                    <FiPackage size={48} className="opacity-50" />
+                  </div>
+                  <p className="text-md font-medium text-gray-600">Belum ada barang yang ditambahkan</p>
+                  <p className="text-sm text-gray-400">Pilih barang di atas untuk menambahkan ke daftar permintaan</p>
+                </div>
               ) : (
-                <Box overflowX="auto">
-                  <Table.Root size="lg" variant="line">
-                    <Table.Header bg="gray.50">
-                      <Table.Row>
-                        <Table.ColumnHeader color="gray.700" fontWeight="bold" fontSize="sm" py={4}>
-                          Nama Barang
-                        </Table.ColumnHeader>
-                        <Table.ColumnHeader color="gray.700" textAlign="center" fontWeight="bold" fontSize="sm">
-                          Jumlah
-                        </Table.ColumnHeader>
-                        <Table.ColumnHeader color="gray.700" fontWeight="bold" fontSize="sm">
-                          Satuan
-                        </Table.ColumnHeader>
-                        <Table.ColumnHeader w="80px"></Table.ColumnHeader>
-                      </Table.Row>
-                    </Table.Header>
-                    <Table.Body>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-50">
+                      <tr className="text-left text-gray-700 font-semibold">
+                        <th className="py-4 px-6">Nama Barang</th>
+                        <th className="py-4 px-6 text-center">Jumlah</th>
+                        <th className="py-4 px-6">Satuan</th>
+                        <th className="py-4 px-6 w-16" />
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
                       {items.map((item, idx) => (
-                        <Table.Row 
-                          key={item.barangId}
-                          bg="white"
-                          _hover={{ bg: "gray.50" }}
-                          transition="background 0.2s"
-                        >
-                          <Table.Cell py={4}>
-                            <HStack>
-                              <Box 
-                                bg="blue.50" 
-                                color={BPS.blue}
-                                w={8} 
-                                h={8} 
-                                borderRadius="lg"
-                                display="flex"
-                                alignItems="center"
-                                justifyContent="center"
-                                fontSize="sm"
-                                fontWeight="bold"
-                              >
+                        <tr key={item.barangId} className="bg-white hover:bg-gray-50 transition">
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#005DA6] flex items-center justify-center text-sm font-bold">
                                 {idx + 1}
-                              </Box>
-                              <Text fontWeight="medium" color="gray.800">
-                                {item.barang.nama}
-                              </Text>
-                            </HStack>
-                          </Table.Cell>
-                          <Table.Cell textAlign="center">
-                            <Badge colorPalette="blue" variant="subtle" px={3} py={1}>
+                              </div>
+                              <span className="text-gray-800 font-medium">{item.barang.nama}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6 text-center">
+                            <span className="inline-flex px-3 py-1 rounded-full bg-blue-100 text-blue-700 font-semibold">
                               {item.jumlah}
-                            </Badge>
-                          </Table.Cell>
-                          <Table.Cell color="gray.600" fontSize="sm">
-                            {item.barang.satuan}
-                          </Table.Cell>
-                          <Table.Cell>
-                            <IconButton
-                              aria-label="Hapus"
-                              size="sm"
-                              colorPalette="red"
-                              variant="ghost"
-                              borderRadius="lg"
+                            </span>
+                          </td>
+                          <td className="py-4 px-6 text-gray-600">{item.barang.satuan}</td>
+                          <td className="py-4 px-6">
+                            <button
                               onClick={() => handleRemoveItem(item.barangId)}
-                              _hover={{ bg: "red.50" }}
+                              className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition"
+                              aria-label="Hapus"
                             >
                               <FiTrash2 />
-                            </IconButton>
-                          </Table.Cell>
-                        </Table.Row>
+                            </button>
+                          </td>
+                        </tr>
                       ))}
-                    </Table.Body>
-                  </Table.Root>
-                </Box>
+                    </tbody>
+                  </table>
+                </div>
               )}
-            </Box>
+            </div>
 
-            <Separator borderColor={BPS.border} />
+            <div className="border-t border-gray-200" />
 
             {/* 4. CATATAN & SUBMIT */}
-            <Box p={{ base: 6, md: 8 }} bg="gray.50">
-              <Field.Root mb={8}>
-                <Field.Label color="gray.700" fontWeight="semibold" mb={3}>
-                  <HStack>
+            <div className="p-6 md:p-8 bg-gray-50">
+              <div className="mb-8">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  <span className="inline-flex items-center gap-2">
                     <FiInfo size={18} color={BPS.blue} />
-                    <Text>Catatan Tambahan (Opsional)</Text>
-                  </HStack>
-                </Field.Label>
-                <Textarea
+                    Catatan Tambahan (Opsional)
+                  </span>
+                </label>
+                <textarea
                   value={catatan}
                   onChange={(e) => setCatatan(e.target.value)}
-                  placeholder="Contoh: Mohon diproses segera untuk kegiatan sensus minggu depan. Terima kasih."
-                  bg="white"
-                  borderColor={BPS.border}
-                  borderRadius="lg"
-                  _focus={{ borderColor: BPS.blue, boxShadow: `0 0 0 1px ${BPS.blue}` }}
                   rows={4}
-                  resize="none"
-                  fontSize="sm"
+                  placeholder="Contoh: Mohon diproses segera untuk kegiatan sensus minggu depan. Terima kasih."
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#005DA6] focus:ring-2 focus:ring-[#005DA6]/30 transition bg-white resize-none text-sm"
                 />
-              </Field.Root>
+              </div>
 
-              <Flex 
-                direction={{ base: "column", md: "row" }}
-                justify="space-between" 
-                align={{ base: "stretch", md: "center" }}
-                gap={4}
-              >
-                <VStack align="start" gap={1} flex={1}>
-                  <Text fontSize="sm" color="gray.600" fontWeight="medium">
-                    📋 Total Item: {items.length} barang
-                  </Text>
-                  <Text fontSize="xs" color="gray.500">
-                    Pastikan semua data sudah benar sebelum mengirim
-                  </Text>
-                </VStack>
-                
-                <Button
-                  size="xl"
-                  bg={BPS.orange}
-                  color="white"
-                  fontSize="md"
-                  px={10}
-                  h="56px"
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex flex-col gap-1 text-gray-600">
+                  <p className="text-sm font-medium">📋 Total Item: {items.length} barang</p>
+                  <p className="text-xs text-gray-500">Pastikan semua data sudah benar sebelum mengirim</p>
+                </div>
+
+                <button
                   onClick={handleSubmit}
-                  loading={loading}
-                  loadingText="Mengirim Permintaan..."
-                  disabled={items.length === 0 || !namaPemohon || !emailPemohon || !unitKerjaId}
-                  borderRadius="xl"
-                  fontWeight="bold"
-                  boxShadow="lg"
-                  _hover={{ 
-                    bg: "#D87C10", 
-                    transform: "translateY(-2px)", 
-                    boxShadow: "xl" 
-                  }}
-                  _active={{ transform: "translateY(0)" }}
-                  transition="all 0.2s"
-                  w={{ base: "full", md: "auto" }}
+                  disabled={items.length === 0 || !namaPemohon || !emailPemohon || !unitKerjaId || loading}
+                  className={`w-full md:w-auto inline-flex items-center justify-center gap-2 px-10 h-14 rounded-xl font-bold text-white shadow-lg transition transform ${
+                    items.length === 0 || !namaPemohon || !emailPemohon || !unitKerjaId || loading
+                      ? "bg-gray-300 cursor-not-allowed"
+                      : "bg-[#F7931E] hover:bg-[#D87C10] hover:-translate-y-0.5"
+                  }`}
                 >
-                  <FiSend style={{ marginRight: "10px" }} />
-                  Kirim Permintaan
-                </Button>
-              </Flex>
-            </Box>
-
-          </Box>
+                  {loading ? "Mengirim Permintaan..." : (
+                    <>
+                      <FiSend />
+                      Kirim Permintaan
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
 
           {/* FOOTER */}
-          <Box 
-            textAlign="center" 
-            py={8} 
-            bg="white" 
-            borderRadius="xl" 
-            shadow="sm"
-          >
-            <Text color="gray.600" fontSize="sm" mb={2}>
-              Sudah mengajukan permintaan sebelumnya?
-            </Text>
-            <Button
-              variant="ghost"
-              colorPalette="blue"
-              size="lg"
-              fontWeight="semibold"
-            >
+          <div className="text-center py-8 bg-white rounded-xl shadow-sm">
+            <p className="text-sm text-gray-600 mb-2">Sudah mengajukan permintaan sebelumnya?</p>
+            <button className="inline-flex items-center gap-2 text-[#005DA6] font-semibold hover:text-[#00457C]">
               Lacak Status Permintaan →
-            </Button>
-          </Box>
-
-        </VStack>
-      </Container>
-    </Box>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

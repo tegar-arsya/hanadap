@@ -2,19 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import {
-    Box,
-    VStack,
-    Button,
-    Input,
-    Field,
-    HStack,
-    Avatar,
-    Badge,
-    Text,
-} from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
-import { FiSave, FiUser, FiLock } from "react-icons/fi";
+import { FiSave, FiLock } from "react-icons/fi";
 import { PageHeader, Card } from "@/components/ui/shared";
 
 interface Profile {
@@ -27,7 +16,7 @@ interface Profile {
 }
 
 export default function ProfilPage() {
-    const { data: session, update } = useSession();
+    const { update } = useSession();
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -36,13 +25,6 @@ export default function ProfilPage() {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-
-    const showToast = (title: string, type: "success" | "error" | "warning") => {
-        toaster.create({
-            title,
-            type,
-        });
-    };
 
     const fetchProfile = async () => {
         try {
@@ -71,15 +53,15 @@ export default function ProfilPage() {
             });
 
             if (res.ok) {
-                showToast("Nama berhasil diubah", "success");
+                toaster.create({ title: "Nama berhasil diubah", type: "success" });
                 await update({ name: nama });
                 fetchProfile();
             } else {
                 const data = await res.json();
-                showToast(data.error || "Gagal mengubah nama", "error");
+                toaster.create({ title: data.error || "Gagal mengubah nama", type: "error" });
             }
         } catch (error) {
-            showToast("Terjadi kesalahan", "error");
+            toaster.create({ title: "Terjadi kesalahan", type: "error" });
         } finally {
             setSaving(false);
         }
@@ -87,11 +69,11 @@ export default function ProfilPage() {
 
     const handleUpdatePassword = async () => {
         if (newPassword !== confirmPassword) {
-            showToast("Password baru tidak cocok", "warning");
+            toaster.create({ title: "Password baru tidak cocok", type: "warning" });
             return;
         }
         if (newPassword.length < 6) {
-            showToast("Password minimal 6 karakter", "warning");
+            toaster.create({ title: "Password minimal 6 karakter", type: "warning" });
             return;
         }
 
@@ -104,133 +86,149 @@ export default function ProfilPage() {
             });
 
             if (res.ok) {
-                showToast("Password berhasil diubah", "success");
+                toaster.create({ title: "Password berhasil diubah", type: "success" });
                 setCurrentPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
             } else {
                 const data = await res.json();
-                showToast(data.error || "Gagal mengubah password", "error");
+                toaster.create({ title: data.error || "Gagal mengubah password", type: "error" });
             }
         } catch (error) {
-            showToast("Terjadi kesalahan", "error");
+            toaster.create({ title: "Terjadi kesalahan", type: "error" });
         } finally {
             setSaving(false);
         }
     };
 
-    if (loading) return null;
+    if (loading) {
+        return (
+            <div className="flex justify-center py-12">
+                <svg className="animate-spin h-8 w-8 text-[#005DA6]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        );
+    }
 
     return (
-        <Box maxW="600px" mx="auto">
+        <div className="max-w-xl mx-auto">
             <PageHeader
                 title="Profil Saya"
                 description="Kelola informasi akun Anda"
             />
 
             <Card>
-                <HStack gap={4} mb={4}>
-                    <Avatar.Root size="lg" colorPalette="blue">
-                        <Avatar.Fallback>{(profile?.nama || "U").substring(0, 2).toUpperCase()}</Avatar.Fallback>
-                    </Avatar.Root>
-                    <VStack align="start" gap={1}>
-                        <Text fontWeight="bold" fontSize="lg" color="var(--foreground)">{profile?.nama}</Text>
-                        <Text color="var(--sidebar-text-muted)" fontSize="sm">{profile?.email}</Text>
-                        <HStack>
-                            <Badge colorPalette="blue">{profile?.role}</Badge>
+                <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-bold">
+                        {(profile?.nama || "U").substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                        <p className="font-bold text-lg text-gray-800">{profile?.nama}</p>
+                        <p className="text-gray-500 text-sm">{profile?.email}</p>
+                        <div className="flex gap-2 mt-1">
+                            <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-700 rounded">
+                                {profile?.role}
+                            </span>
                             {profile?.unitKerja && (
-                                <Badge colorPalette="green">{profile.unitKerja.nama}</Badge>
+                                <span className="inline-flex px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">
+                                    {profile.unitKerja.nama}
+                                </span>
                             )}
-                        </HStack>
-                    </VStack>
-                </HStack>
-                <Text fontSize="sm" color="var(--sidebar-text-muted)">
+                        </div>
+                    </div>
+                </div>
+                <p className="text-sm text-gray-500">
                     Bergabung sejak{" "}
                     {new Date(profile?.createdAt || "").toLocaleDateString("id-ID", {
                         day: "numeric",
                         month: "long",
                         year: "numeric",
                     })}
-                </Text>
+                </p>
             </Card>
 
-            <Box mt={4}>
+            <div className="mt-4">
                 <Card title="Ubah Nama">
-                    <HStack flexWrap={{ base: "wrap", md: "nowrap" }} gap={3}>
-                        <Field.Root flex={1}>
-                            <Input
-                                value={nama}
-                                onChange={(e) => setNama(e.target.value)}
-                                placeholder="Nama lengkap"
-                                bg="var(--input-bg)"
-                                borderColor="var(--input-border)"
-                                color="var(--foreground)"
-                            />
-                        </Field.Root>
-                        <Button
-                            colorPalette="blue"
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <input
+                            type="text"
+                            value={nama}
+                            onChange={(e) => setNama(e.target.value)}
+                            placeholder="Nama lengkap"
+                            className="flex-1 px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#005DA6] focus:border-transparent text-sm"
+                        />
+                        <button
                             onClick={handleUpdateNama}
-                            loading={saving}
+                            disabled={saving}
+                            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#005DA6] text-white rounded-lg hover:bg-[#00457C] transition-colors disabled:opacity-50"
                         >
-                            <FiSave />
+                            {saving ? (
+                                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            ) : (
+                                <FiSave className="w-4 h-4" />
+                            )}
                             Simpan
-                        </Button>
-                    </HStack>
+                        </button>
+                    </div>
                 </Card>
-            </Box>
+            </div>
 
-            <Box mt={4}>
+            <div className="mt-4">
                 <Card title="Ubah Password">
-                    <VStack gap={4}>
-                        <Field.Root w="full">
-                            <Field.Label fontSize="sm" color="var(--foreground)">Password Saat Ini</Field.Label>
-                            <Input
+                    <div className="flex flex-col gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Password Saat Ini</label>
+                            <input
                                 type="password"
                                 value={currentPassword}
                                 onChange={(e) => setCurrentPassword(e.target.value)}
                                 placeholder="••••••••"
-                                bg="var(--input-bg)"
-                                borderColor="var(--input-border)"
-                                color="var(--foreground)"
+                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#005DA6] focus:border-transparent text-sm"
                             />
-                        </Field.Root>
-                        <Field.Root w="full">
-                            <Field.Label fontSize="sm" color="var(--foreground)">Password Baru</Field.Label>
-                            <Input
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Password Baru</label>
+                            <input
                                 type="password"
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 placeholder="••••••••"
-                                bg="var(--input-bg)"
-                                borderColor="var(--input-border)"
-                                color="var(--foreground)"
+                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#005DA6] focus:border-transparent text-sm"
                             />
-                        </Field.Root>
-                        <Field.Root w="full">
-                            <Field.Label fontSize="sm" color="var(--foreground)">Konfirmasi Password Baru</Field.Label>
-                            <Input
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5">Konfirmasi Password Baru</label>
+                            <input
                                 type="password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="••••••••"
-                                bg="var(--input-bg)"
-                                borderColor="var(--input-border)"
-                                color="var(--foreground)"
+                                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#005DA6] focus:border-transparent text-sm"
                             />
-                        </Field.Root>
-                        <Button
-                            colorPalette="blue"
-                            w="full"
+                        </div>
+                        <button
                             onClick={handleUpdatePassword}
-                            loading={saving}
-                            disabled={!currentPassword || !newPassword || !confirmPassword}
+                            disabled={saving || !currentPassword || !newPassword || !confirmPassword}
+                            className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#005DA6] text-white rounded-lg hover:bg-[#00457C] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <FiLock />
+                            {saving ? (
+                                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            ) : (
+                                <FiLock className="w-4 h-4" />
+                            )}
                             Ubah Password
-                        </Button>
-                    </VStack>
+                        </button>
+                    </div>
                 </Card>
-            </Box>
-        </Box>
+            </div>
+        </div>
     );
 }

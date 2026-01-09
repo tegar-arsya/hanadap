@@ -5,20 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import {
-    Box,
-    Flex,
-    VStack,
-    HStack,
-    Text,
-    Avatar,
-    Heading,
-    Badge,
-    IconButton,
-    Portal,
-    Icon,
-} from "@chakra-ui/react";
-import { Tooltip } from "./tooltip";
-import {
     FiMenu,
     FiX,
     FiChevronLeft,
@@ -29,12 +15,8 @@ import {
 import { IconType } from "react-icons";
 
 // --- KONFIGURASI WARNA BPS ---
-const BPS = {
-    blue: "#005DA6",
-    darkBlue: "#00457C",
-    green: "#8CC63F",
-    grayBg: "#F7F8FA",
-};
+// Tidak perlu object BPS di sini jika kita pakai Tailwind classes, tapi kept for reference
+// Blue: #005DA6 | Orange: #F7931E | Green: #8CC63F
 
 export interface MenuItem {
     href: string;
@@ -88,46 +70,44 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
 }
 
 // --- ITEM SIDEBAR ---
-const SidebarItem = ({ menu, isCollapsed, variant }: { menu: MenuItem; isCollapsed: boolean; variant: "admin" | "unit-kerja" }) => {
+interface SidebarItemProps {
+    menu: MenuItem;
+    isCollapsed: boolean;
+    variant: "admin" | "unit-kerja";
+}
+
+const SidebarItem = ({ menu, isCollapsed, variant }: SidebarItemProps) => {
     const pathname = usePathname();
     const isActive = pathname === menu.href || pathname.startsWith(`${menu.href}/`);
 
-    const activeColor = variant === "admin" ? BPS.blue : BPS.green;
-    const activeBg = "#EBF8FF";
-    const hoverBg = "gray.50";
-    const textColor = "gray.600";
-    const activeTextColor = activeColor;
+    const Icon = menu.icon;
+
+    // Admin: Blue Theme | Unit Kerja: Green Theme
+    const activeClasses = variant === "admin"
+        ? "bg-[#005DA6] text-white shadow-lg shadow-blue-500/30"
+        : "bg-[#8CC63F] text-white shadow-lg shadow-green-500/30";
+
+    const inactiveClasses = "text-gray-500 hover:bg-gray-50 hover:text-gray-900";
 
     return (
-        <Tooltip content={menu.label} disabled={!isCollapsed} placement="right" openDelay={500}>
-            <Link href={menu.href} style={{ width: "100%" }}>
-                <HStack
-                    px={3}
-                    py={3}
-                    mx={2}
-                    borderRadius="md"
-                    cursor="pointer"
-                    bg={isActive ? activeBg : "transparent"}
-                    color={isActive ? activeTextColor : textColor}
-                    fontWeight={isActive ? "bold" : "medium"}
-                    borderRight={isActive ? "3px solid" : "3px solid transparent"}
-                    borderColor={isActive ? activeColor : "transparent"}
-                    transition="all 0.2s"
-                    _hover={{
-                        bg: isActive ? activeBg : hoverBg,
-                        color: isActive ? activeTextColor : "gray.900",
-                    }}
-                    justify={isCollapsed ? "center" : "flex-start"}
-                >
-                    <Icon as={menu.icon} boxSize={5} />
-                    {!isCollapsed && (
-                        <Text fontSize="sm" whiteSpace="nowrap">
-                            {menu.label}
-                        </Text>
-                    )}
-                </HStack>
-            </Link>
-        </Tooltip>
+        <Link href={menu.href} className="w-full px-3 mb-1 block group" title={isCollapsed ? menu.label : undefined}>
+            <div
+                className={`
+                    flex items-center p-3 rounded-xl transition-all duration-300 ease-in-out
+                    ${isActive ? activeClasses : inactiveClasses}
+                    ${isCollapsed ? "justify-center" : "gap-3"}
+                `}
+            >
+                <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? "text-white" : ""}`} />
+                {!isCollapsed && (
+                    <span className="text-sm font-medium whitespace-nowrap">{menu.label}</span>
+                )}
+
+                {isActive && !isCollapsed && (
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white opacity-80" />
+                )}
+            </div>
+        </Link>
     );
 };
 
@@ -141,153 +121,125 @@ interface SidebarProps {
 
 export function Sidebar({ menus, variant, title, badgeText }: SidebarProps) {
     const { data: session } = useSession();
-    const { isCollapsed, isMobileOpen, toggleCollapse, closeMobile } = useSidebar();
+    const { isCollapsed, toggleCollapse, closeMobile } = useSidebar();
 
-    const sidebarWidth = isCollapsed ? "70px" : "260px";
-    const brandColor = variant === "admin" ? BPS.blue : BPS.green;
+    const brandGradient = variant === "admin"
+        ? "from-[#005DA6] to-[#00457C]"
+        : "from-[#8CC63F] to-[#7CB342]";
 
-    const bgSidebar = "white";
-    const borderColor = "gray.200";
-    const headerText = "gray.800";
-    const footerBg = "gray.50";
+    const badgeColor = variant === "admin" ? "bg-blue-100 text-[#005DA6]" : "bg-green-100 text-green-700";
 
     const SidebarContent = (
-        <Flex direction="column" h="full" bg={bgSidebar} borderRight="1px solid" borderColor={borderColor}>
+        <div className="flex flex-col h-full bg-white border-r border-gray-100 shadow-sm relative z-50">
             {/* HEADER */}
-            <Flex h="64px" align="center" justify={isCollapsed ? "center" : "space-between"} px={4} borderBottom="1px solid" borderColor={borderColor}>
+            <div className={`h-20 flex items-center px-5 ${isCollapsed ? "justify-center" : "justify-between"}`}>
                 {!isCollapsed ? (
-                    <HStack gap={3}>
-                        <Flex w={8} h={8} bg={brandColor} borderRadius="md" align="center" justify="center" color="white">
-                            <FiGrid />
-                        </Flex>
-                        <VStack align="start" gap={0} lineHeight="shorter">
-                            <Heading size="sm" color={headerText}>{title}</Heading>
-                            <Badge colorPalette={variant === "admin" ? "blue" : "green"} variant="solid" size="xs">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 bg-gradient-to-br ${brandGradient} rounded-xl flex items-center justify-center text-white shadow-md`}>
+                            <FiGrid className="w-5 h-5" />
+                        </div>
+                        <div className="flex flex-col">
+                            <h1 className="text-sm font-bold text-gray-800 tracking-tight">{title}</h1>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold mt-0.5 self-start ${badgeColor}`}>
                                 {badgeText}
-                            </Badge>
-                        </VStack>
-                    </HStack>
+                            </span>
+                        </div>
+                    </div>
                 ) : (
-                    <Flex w={8} h={8} bg={brandColor} borderRadius="md" align="center" justify="center" color="white">
-                        <Text fontWeight="bold" fontSize="xs">BPS</Text>
-                    </Flex>
+                    <div className={`w-9 h-9 bg-gradient-to-br ${brandGradient} rounded-xl flex items-center justify-center text-white shadow-md`}>
+                        <span className="text-xs font-bold">BPS</span>
+                    </div>
                 )}
-            </Flex>
+            </div>
+
+            {/* SEPARATOR */}
+            <div className="h-px bg-gradient-to-r from-transparent via-gray-100 to-transparent mx-4 mb-4" />
 
             {/* MENU ITEMS */}
-            <VStack flex={1} align="stretch" py={6} gap={1} overflowY="auto">
+            <div className="flex-1 flex flex-col gap-0.5 overflow-y-auto custom-scrollbar px-1">
                 {menus.filter((m) => !m.hidden).map((menu) => (
                     <SidebarItem key={menu.href} menu={menu} isCollapsed={isCollapsed} variant={variant} />
                 ))}
-            </VStack>
+            </div>
 
             {/* FOOTER */}
-            <Box p={4} borderTop="1px solid" borderColor={borderColor} bg={footerBg}>
-                <VStack gap={4}>
+            <div className="p-4 mx-3 mb-3 bg-gray-50 rounded-2xl border border-gray-100">
+                <div className="flex flex-col gap-3">
                     {/* COLLAPSE TOGGLE (Desktop) */}
-                    <HStack w="full" justify={isCollapsed ? "center" : "flex-end"}>
-                        <Box display={{ base: "none", lg: isCollapsed ? "none" : "block" }}>
-                            <IconButton
-                                aria-label="Collapse"
-                                size="xs"
-                                variant="outline"
-                                bg="white"
-                                borderColor={borderColor}
-                                onClick={toggleCollapse}
-                            >
-                                <FiChevronLeft />
-                            </IconButton>
-                        </Box>
-                    </HStack>
-
-                    {/* Expand Toggle when Collapsed */}
-                    {isCollapsed && (
-                        <IconButton
-                            aria-label="Expand"
-                            size="xs"
-                            variant="outline"
-                            bg="white"
-                            display={{ base: "none", lg: "flex" }}
+                    <div className={`hidden lg:flex w-full ${isCollapsed ? "justify-center" : "justify-end"}`}>
+                        <button
                             onClick={toggleCollapse}
+                            className={`p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-white hover:shadow-sm transition-all ${!isCollapsed ? "ml-auto" : ""}`}
+                            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
                         >
-                            <FiChevronRight />
-                        </IconButton>
-                    )}
+                            {isCollapsed ? <FiChevronRight className="w-5 h-5" /> : <FiChevronLeft className="w-5 h-5" />}
+                        </button>
+                    </div>
+
+                    {/* SEPARATOR */}
+                    {!isCollapsed && <div className="h-px bg-gray-200" />}
 
                     {/* USER INFO */}
-                    <HStack w="full" justify={isCollapsed ? "center" : "space-between"}>
-                        <HStack gap={3}>
-                            <Avatar.Root size="sm" bg={brandColor} color="white">
-                                <Avatar.Fallback name={session?.user?.name || "User"} />
-                            </Avatar.Root>
+                    <div className={`flex w-full ${isCollapsed ? "justify-center" : "justify-between"} items-center`}>
+                        <div className="flex items-center gap-3 overflow-hidden">
+                            <div className={`w-9 h-9 bg-gradient-to-br ${brandGradient} rounded-full flex flex-shrink-0 items-center justify-center text-white text-xs font-bold ring-2 ring-white shadow-sm`}>
+                                {session?.user?.name?.charAt(0) || "U"}
+                            </div>
                             {!isCollapsed && (
-                                <VStack align="start" gap={0}>
-                                    <Text fontSize="xs" fontWeight="bold" color={headerText} lineClamp={1}>
+                                <div className="flex flex-col min-w-0">
+                                    <span className="text-xs font-bold text-gray-800 truncate block">
                                         {session?.user?.name || "Pengguna"}
-                                    </Text>
-                                    <Text fontSize="xs" color="gray.500" lineClamp={1}>
+                                    </span>
+                                    <span className="text-[10px] text-gray-500 truncate block">
                                         {session?.user?.email || "user@bps.go.id"}
-                                    </Text>
-                                </VStack>
+                                    </span>
+                                </div>
                             )}
-                        </HStack>
+                        </div>
 
                         {!isCollapsed && (
-                            <IconButton
-                                aria-label="Logout"
-                                size="sm"
-                                variant="ghost"
-                                colorPalette="red"
+                            <button
                                 onClick={() => signOut({ callbackUrl: "/login" })}
+                                className="p-2 ml-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all flex-shrink-0"
+                                aria-label="Logout"
+                                title="Keluar"
                             >
-                                <FiLogOut />
-                            </IconButton>
+                                <FiLogOut className="w-4 h-4" />
+                            </button>
                         )}
-                    </HStack>
-                </VStack>
-            </Box>
-        </Flex>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 
     return (
         <>
-            <Box
-                as="aside"
-                display={{ base: "none", lg: "block" }}
-                w={sidebarWidth}
-                position="fixed"
-                h="100vh"
-                zIndex={50}
-                transition="width 0.2s ease"
+            {/* Desktop Sidebar */}
+            <aside
+                className={`hidden lg:block fixed h-screen z-50 transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${isCollapsed ? "w-[88px]" : "w-[280px]"}`}
             >
                 {SidebarContent}
-            </Box>
+            </aside>
 
-            {isMobileOpen && (
-                <Portal>
-                    <Box position="fixed" inset={0} bg="blackAlpha.600" zIndex={99} onClick={closeMobile} display={{ lg: "none" }} />
-                </Portal>
-            )}
-
-            <Box
-                as="aside"
-                display={{ base: "block", lg: "none" }}
-                position="fixed"
-                left={0} top={0} bottom={0}
-                w="280px"
-                bg={bgSidebar}
-                zIndex={100}
-                transform={isMobileOpen ? "translateX(0)" : "translateX(-100%)"}
-                transition="transform 0.3s ease"
-                shadow="2xl"
+            {/* Mobile Sidebar */}
+            <aside
+                className={`
+                    lg:hidden fixed left-0 top-0 bottom-0 w-[280px] bg-white z-[100] shadow-2xl
+                    transition-transform duration-300 ease-in-out
+                    ${useSidebar().isMobileOpen ? "translate-x-0" : "-translate-x-full"}
+                `}
             >
-                <Flex justify="flex-end" p={2} position="absolute" right={0} top={0}>
-                    <IconButton aria-label="Close" variant="ghost" onClick={closeMobile} color="black">
-                        <FiX />
-                    </IconButton>
-                </Flex>
+                <div className="absolute top-4 right-4 z-50">
+                    <button
+                        onClick={closeMobile}
+                        className="p-2 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors"
+                    >
+                        <FiX className="w-5 h-5" />
+                    </button>
+                </div>
                 {SidebarContent}
-            </Box>
+            </aside>
         </>
     );
 }
@@ -295,38 +247,27 @@ export function Sidebar({ menus, variant, title, badgeText }: SidebarProps) {
 // --- MOBILE HEADER ---
 export function MobileHeader({ title, variant }: { title: string; variant: "admin" | "unit-kerja" }) {
     const { toggleMobile } = useSidebar();
-    const brandColor = variant === "admin" ? BPS.blue : BPS.green;
+    const brandGradient = variant === "admin"
+        ? "from-[#005DA6] to-[#00457C]"
+        : "from-[#8CC63F] to-[#7CB342]";
 
     return (
-        <Flex
-            display={{ base: "flex", lg: "none" }}
-            position="fixed"
-            top={0} left={0} right={0}
-            h="64px"
-            bg="white"
-            borderBottom="1px solid"
-            borderColor="gray.200"
-            align="center"
-            justify="space-between"
-            px={4}
-            zIndex={40}
-        >
-            <IconButton
-                aria-label="Menu"
-                variant="ghost"
+        <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-4 z-40 shadow-sm">
+            <button
                 onClick={toggleMobile}
-                color="gray.600"
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Toggle menu"
             >
-                <FiMenu size={24} />
-            </IconButton>
-            <HStack>
-                <Flex w={6} h={6} bg={brandColor} borderRadius="sm" align="center" justify="center" color="white">
-                    <FiGrid size={14} />
-                </Flex>
-                <Heading size="sm" color="gray.800">{title}</Heading>
-            </HStack>
-            <Box w={8} />
-        </Flex>
+                <FiMenu className="w-6 h-6" />
+            </button>
+            <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 bg-gradient-to-br ${brandGradient} rounded-lg flex items-center justify-center text-white shadow-sm`}>
+                    <FiGrid className="w-4 h-4" />
+                </div>
+                <h1 className="text-sm font-semibold text-gray-800">{title}</h1>
+            </div>
+            <div className="w-10" />
+        </header>
     );
 }
 
@@ -350,25 +291,32 @@ export function DashboardLayout({ children, menus, variant, title, badgeText }: 
 }
 
 function LayoutContent({ children, menus, variant, title, badgeText }: DashboardLayoutProps) {
-    const { isCollapsed } = useSidebar();
-    const sidebarWidth = isCollapsed ? "70px" : "260px";
+    const { isCollapsed, isMobileOpen, closeMobile } = useSidebar();
 
     return (
-        <Flex minH="100vh" bg={BPS.grayBg}>
+        <div className="flex min-h-screen bg-[#F0F2F5] font-sans selection:bg-[#005DA6] selection:text-white">
             <Sidebar menus={menus} variant={variant} title={title} badgeText={badgeText} />
+
+            {/* Mobile Overlay */}
+            {isMobileOpen && (
+                <div
+                    className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[90] lg:hidden animate-in fade-in duration-200"
+                    onClick={closeMobile}
+                />
+            )}
+
             <MobileHeader title={title} variant={variant} />
 
-            <Box
-                flex={1}
-                ml={{ base: 0, lg: sidebarWidth }}
-                pt={{ base: "64px", lg: 0 }}
-                transition="margin-left 0.2s ease"
-                w="full"
+            <main
+                className={`
+                    flex-1 pt-20 lg:pt-8 pb-8 px-4 md:px-8 w-full transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]
+                    ${isCollapsed ? "lg:ml-[88px]" : "lg:ml-[280px]"}
+                `}
             >
-                <Box p={{ base: 4, md: 8 }} maxW="100%">
+                <div className="max-w-7xl mx-auto animate-in fade-in-50 slide-in-from-bottom-2 duration-500">
                     {children}
-                </Box>
-            </Box>
-        </Flex>
+                </div>
+            </main>
+        </div>
     );
 }

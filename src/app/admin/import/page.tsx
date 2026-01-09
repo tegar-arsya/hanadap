@@ -1,18 +1,6 @@
 "use client";
 
 import { useState, useRef } from "react";
-import {
-    Box,
-    Text,
-    VStack,
-    HStack,
-    Button,
-    Input,
-    Alert,
-    Progress,
-    Badge,
-    Table,
-} from "@chakra-ui/react";
 import { FiUpload, FiDownload, FiCheck, FiX } from "react-icons/fi";
 import { PageHeader, Card } from "@/components/ui/shared";
 
@@ -59,132 +47,105 @@ export default function AdminImportPage() {
     };
 
     return (
-        <Box>
-            <PageHeader title="Import Data" subtitle="Upload file Excel/CSV untuk import barang" />
+        <div>
+            <PageHeader title="Import Data" description="Upload file Excel/CSV untuk import barang" />
 
-            <Card style={{ marginBottom: "1.5rem" }}>
-                <Text fontWeight="semibold" mb={4} style={{ color: "var(--foreground)" }}>Format File</Text>
-                <Box overflowX="auto">
-                    <Table.Root size="sm">
-                        <Table.Header>
-                            <Table.Row style={{ background: "var(--table-header-bg)" }}>
-                                <Table.ColumnHeader style={{ color: "var(--foreground)" }}>Kolom</Table.ColumnHeader>
-                                <Table.ColumnHeader style={{ color: "var(--foreground)" }}>Wajib</Table.ColumnHeader>
-                                <Table.ColumnHeader style={{ color: "var(--foreground)" }}>Keterangan</Table.ColumnHeader>
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
-                            <Table.Row style={{ borderColor: "var(--card-border)" }}>
-                                <Table.Cell><code style={{ color: "var(--stat-blue-color)" }}>nama</code></Table.Cell>
-                                <Table.Cell><FiCheck color="var(--stat-green-color)" /></Table.Cell>
-                                <Table.Cell style={{ color: "var(--foreground)" }}>Nama barang</Table.Cell>
-                            </Table.Row>
-                            <Table.Row style={{ borderColor: "var(--card-border)" }}>
-                                <Table.Cell><code style={{ color: "var(--stat-blue-color)" }}>satuan</code></Table.Cell>
-                                <Table.Cell><FiCheck color="var(--stat-green-color)" /></Table.Cell>
-                                <Table.Cell style={{ color: "var(--foreground)" }}>Satuan (pcs, rim, dll)</Table.Cell>
-                            </Table.Row>
-                            <Table.Row style={{ borderColor: "var(--card-border)" }}>
-                                <Table.Cell><code style={{ color: "var(--stat-blue-color)" }}>stokMinimum</code></Table.Cell>
-                                <Table.Cell><FiX color="var(--muted-foreground)" /></Table.Cell>
-                                <Table.Cell style={{ color: "var(--foreground)" }}>Stok minimum (default: 10)</Table.Cell>
-                            </Table.Row>
-                            <Table.Row style={{ borderColor: "var(--card-border)" }}>
-                                <Table.Cell><code style={{ color: "var(--stat-blue-color)" }}>kategori</code></Table.Cell>
-                                <Table.Cell><FiX color="var(--muted-foreground)" /></Table.Cell>
-                                <Table.Cell style={{ color: "var(--foreground)" }}>Nama kategori</Table.Cell>
-                            </Table.Row>
-                        </Table.Body>
-                    </Table.Root>
-                </Box>
-                <Button
-                    mt={4}
-                    variant="outline"
+            <Card className="mb-6">
+                <h3 className="font-semibold text-gray-800 mb-4">Format File</h3>
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <th className="text-left px-4 py-2 text-sm font-semibold text-gray-600">Kolom</th>
+                                <th className="text-left px-4 py-2 text-sm font-semibold text-gray-600">Wajib</th>
+                                <th className="text-left px-4 py-2 text-sm font-semibold text-gray-600">Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            <tr>
+                                <td className="px-4 py-2"><code className="text-[#005DA6]">nama</code></td>
+                                <td className="px-4 py-2"><FiCheck className="text-green-500" /></td>
+                                <td className="px-4 py-2 text-gray-600">Nama barang</td>
+                            </tr>
+                            <tr>
+                                <td className="px-4 py-2"><code className="text-[#005DA6]">satuan</code></td>
+                                <td className="px-4 py-2"><FiCheck className="text-green-500" /></td>
+                                <td className="px-4 py-2 text-gray-600">Satuan (pcs, rim, dll)</td>
+                            </tr>
+                            <tr>
+                                <td className="px-4 py-2"><code className="text-[#005DA6]">stokMinimum</code></td>
+                                <td className="px-4 py-2"><FiX className="text-gray-400" /></td>
+                                <td className="px-4 py-2 text-gray-600">Stok minimum (default: 10)</td>
+                            </tr>
+                            <tr>
+                                <td className="px-4 py-2"><code className="text-[#005DA6]">kategori</code></td>
+                                <td className="px-4 py-2"><FiX className="text-gray-400" /></td>
+                                <td className="px-4 py-2 text-gray-600">Nama kategori</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button
                     onClick={downloadTemplate}
-                    style={{
-                        borderColor: "var(--stat-blue-color)",
-                        color: "var(--stat-blue-color)",
-                    }}
+                    className="flex items-center gap-2 mt-4 px-4 py-2 border border-[#005DA6] text-[#005DA6] rounded-lg hover:bg-blue-50 transition-colors"
                 >
-                    <FiDownload />
+                    <FiDownload className="w-4 h-4" />
                     Download Template CSV
-                </Button>
+                </button>
             </Card>
 
-            <Card style={{ marginBottom: "1.5rem" }}>
-                <Text fontWeight="semibold" mb={4} style={{ color: "var(--foreground)" }}>Upload File</Text>
-                <Box
-                    position="relative"
-                    borderRadius="lg"
-                    p={10}
-                    textAlign="center"
-                    transition="all 0.2s"
-                    style={{
-                        border: "2px dashed var(--input-border)",
-                        background: "var(--input-bg)",
-                    }}
-                    _hover={{
-                        borderColor: "var(--stat-blue-color)",
-                    }}
-                >
-                    <Input
+            <Card className="mb-6">
+                <h3 className="font-semibold text-gray-800 mb-4">Upload File</h3>
+                <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-10 text-center hover:border-[#005DA6] transition-colors bg-gray-50">
+                    <input
                         ref={fileInputRef}
                         type="file"
                         accept=".xlsx,.xls,.csv"
                         onChange={handleFileChange}
-                        position="absolute"
-                        inset={0}
-                        opacity={0}
-                        cursor="pointer"
-                        h="full"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
                     />
-                    <VStack>
-                        <Box style={{ color: "var(--muted-foreground)" }}>
-                            <FiUpload size={32} />
-                        </Box>
-                        <Text style={{ color: "var(--foreground)" }}>
+                    <div className="flex flex-col items-center gap-2">
+                        <FiUpload className="w-8 h-8 text-gray-400" />
+                        <p className="text-gray-700">
                             {loading ? "Memproses..." : "Klik atau drag file ke sini"}
-                        </Text>
-                        <Text fontSize="sm" style={{ color: "var(--muted-foreground)" }}>
-                            Excel (.xlsx, .xls) atau CSV
-                        </Text>
-                    </VStack>
+                        </p>
+                        <p className="text-sm text-gray-500">Excel (.xlsx, .xls) atau CSV</p>
+                    </div>
                     {loading && (
-                        <Progress.Root size="xs" mt={4}>
-                            <Progress.Track style={{ background: "var(--input-bg)" }}>
-                                <Progress.Range style={{ background: "var(--stat-blue-color)" }} />
-                            </Progress.Track>
-                        </Progress.Root>
+                        <div className="mt-4 h-1 bg-gray-200 rounded overflow-hidden">
+                            <div className="h-full bg-[#005DA6] animate-pulse w-1/2"></div>
+                        </div>
                     )}
-                </Box>
+                </div>
             </Card>
 
             {result && (
-                <Alert.Root
-                    status={result.failed === 0 ? "success" : "warning"}
-                    borderRadius="lg"
-                    style={{
-                        background: result.failed === 0 ? "var(--stat-green-bg)" : "var(--stat-orange-bg)",
-                    }}
-                >
-                    <Alert.Indicator />
-                    <Alert.Content>
-                        <VStack align="start" gap={2} flex={1}>
-                            <Text fontWeight="semibold" style={{ color: "var(--foreground)" }}>{result.message}</Text>
-                            <HStack>
-                                <Badge style={{ background: "var(--stat-green-bg)", color: "var(--stat-green-color)" }}>
-                                    {result.success} berhasil
-                                </Badge>
-                                {result.failed !== undefined && result.failed > 0 && (
-                                    <Badge style={{ background: "var(--stat-red-bg)", color: "var(--stat-red-color)" }}>
-                                        {result.failed} gagal
-                                    </Badge>
-                                )}
-                            </HStack>
-                        </VStack>
-                    </Alert.Content>
-                </Alert.Root>
+                <div className={`
+                    p-4 rounded-lg flex items-start gap-3
+                    ${result.failed === 0 ? "bg-green-100" : "bg-orange-100"}
+                `}>
+                    <div className={`p-2 rounded-full ${result.failed === 0 ? "bg-green-200" : "bg-orange-200"}`}>
+                        {result.failed === 0 ? (
+                            <FiCheck className="w-5 h-5 text-green-700" />
+                        ) : (
+                            <FiX className="w-5 h-5 text-orange-700" />
+                        )}
+                    </div>
+                    <div className="flex-1">
+                        <p className="font-semibold text-gray-800">{result.message}</p>
+                        <div className="flex gap-2 mt-2">
+                            <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-200 text-green-700 rounded">
+                                {result.success} berhasil
+                            </span>
+                            {result.failed !== undefined && result.failed > 0 && (
+                                <span className="inline-flex px-2 py-1 text-xs font-medium bg-red-200 text-red-700 rounded">
+                                    {result.failed} gagal
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                </div>
             )}
-        </Box>
+        </div>
     );
 }

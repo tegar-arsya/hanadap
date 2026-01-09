@@ -3,20 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-    Box,
-    SimpleGrid,
-    Flex,
-    Heading,
-    Text,
-    Icon,
-    Card,
-    HStack,
-    Badge,
-    Table,
-    Button,
-    Skeleton
-} from "@chakra-ui/react";
-import {
     FiPackage,
     FiLayers,
     FiClock,
@@ -26,7 +12,6 @@ import {
 } from "react-icons/fi";
 import { toaster } from "@/components/ui/toaster";
 
-// Tipe data (sesuaikan dengan return API)
 interface DashboardData {
     totalBarang: number;
     totalStok: number;
@@ -35,53 +20,64 @@ interface DashboardData {
     recentRequests: any[];
 }
 
-// --- KOMPONEN STAT CARD ---
-const DashboardStatCard = ({ label, value, icon, color, bgIcon, helpText, loading }: any) => (
-    <Card.Root
-        bg="white"
-        shadow="sm"
-        border="1px solid"
-        borderColor="gray.200"
-        transition="transform 0.2s"
-        _hover={{ transform: "translateY(-2px)", shadow: "md" }}
-    >
-        <Card.Body p={6}>
-            <Flex justify="space-between" align="start">
-                <Box w="full">
-                    <Text fontSize="sm" fontWeight="medium" color="gray.500">
-                        {label}
-                    </Text>
+// --- SKELETON COMPONENT ---
+function Skeleton({ className = "" }: { className?: string }) {
+    return <div className={`bg-gray-200 animate-pulse rounded ${className}`} />;
+}
+
+// --- STAT CARD COMPONENT ---
+interface StatCardProps {
+    label: string;
+    value?: number;
+    icon: React.ReactNode;
+    iconBg: string;
+    iconColor: string;
+    helpText: string;
+    loading?: boolean;
+}
+
+function DashboardStatCard({ label, value, icon, iconBg, iconColor, helpText, loading }: StatCardProps) {
+    return (
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200">
+            <div className="flex justify-between items-start">
+                <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-500">{label}</p>
                     {loading ? (
-                        <Skeleton height="32px" width="60%" mt={2} mb={1} />
+                        <Skeleton className="h-8 w-3/5 mt-2 mb-1" />
                     ) : (
-                        <Heading size="3xl" mt={2} mb={1} color="gray.800">
-                            {value?.toLocaleString('id-ID')}
-                        </Heading>
+                        <h3 className="text-3xl font-bold text-gray-800 mt-2 mb-1">
+                            {value?.toLocaleString('id-ID') ?? 0}
+                        </h3>
                     )}
-                    <Text fontSize="xs" color="gray.400">
-                        {helpText}
-                    </Text>
-                </Box>
-                <Flex
-                    w={12} h={12}
-                    align="center" justify="center"
-                    bg={bgIcon}
-                    borderRadius="xl"
-                    color={color}
-                    flexShrink={0}
-                >
-                    <Icon as={icon} boxSize={6} />
-                </Flex>
-            </Flex>
-        </Card.Body>
-    </Card.Root>
-);
+                    <p className="text-xs text-gray-400">{helpText}</p>
+                </div>
+                <div className={`w-12 h-12 flex items-center justify-center rounded-xl ${iconBg} ${iconColor}`}>
+                    {icon}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// --- STATUS BADGE COMPONENT ---
+function StatusBadge({ status }: { status: string }) {
+    const colorMap: Record<string, string> = {
+        APPROVED: "bg-green-100 text-green-700",
+        REJECTED: "bg-red-100 text-red-700",
+        PENDING: "bg-orange-100 text-orange-700",
+    };
+
+    return (
+        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${colorMap[status] || "bg-gray-100 text-gray-700"}`}>
+            {status}
+        </span>
+    );
+}
 
 export default function AdminDashboard() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
 
-    // Fetching Client Side
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -99,191 +95,158 @@ export default function AdminDashboard() {
         fetchData();
     }, []);
 
-    // Warna BPS
-    const BPS_BLUE = "#005DA6";
-    const BPS_ORANGE = "#F7931E";
-    const BPS_GREEN = "#8CC63F";
-
     return (
-        <Box>
+        <div>
             {/* --- HEADER SECTION --- */}
-            <Box mb={8}>
-                <Heading size="xl" color="gray.800" mb={2}>
-                    Dashboard Overview
-                </Heading>
-                <Text color="gray.600">
-                    Selamat datang kembali di Sistem Logistik BPS.
-                </Text>
-            </Box>
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">Dashboard Overview</h1>
+                <p className="text-gray-600">Selamat datang kembali di Sistem Logistik BPS.</p>
+            </div>
 
             {/* --- STATS GRID --- */}
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap={6} mb={10}>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                 <DashboardStatCard
                     loading={loading}
                     label="Total Aset Barang"
                     value={data?.totalBarang}
-                    icon={FiPackage}
-                    color={BPS_BLUE}
-                    bgIcon="blue.50"
+                    icon={<FiPackage className="w-6 h-6" />}
+                    iconColor="text-[#005DA6]"
+                    iconBg="bg-blue-50"
                     helpText="Jenis barang terdaftar"
                 />
                 <DashboardStatCard
                     loading={loading}
                     label="Total Stok Unit"
                     value={data?.totalStok}
-                    icon={FiLayers}
-                    color="purple.500"
-                    bgIcon="purple.50"
+                    icon={<FiLayers className="w-6 h-6" />}
+                    iconColor="text-purple-500"
+                    iconBg="bg-purple-50"
                     helpText="Akumulasi seluruh stok"
                 />
                 <DashboardStatCard
                     loading={loading}
                     label="Menunggu Persetujuan"
                     value={data?.pendingRequests}
-                    icon={FiClock}
-                    color={BPS_ORANGE}
-                    bgIcon="orange.50"
+                    icon={<FiClock className="w-6 h-6" />}
+                    iconColor="text-orange-500"
+                    iconBg="bg-orange-50"
                     helpText="Perlu tindakan segera"
                 />
                 <DashboardStatCard
                     loading={loading}
                     label="Permintaan Selesai"
                     value={data?.approvedRequests}
-                    icon={FiCheckCircle}
-                    color={BPS_GREEN}
-                    bgIcon="green.50"
+                    icon={<FiCheckCircle className="w-6 h-6" />}
+                    iconColor="text-green-500"
+                    iconBg="bg-green-50"
                     helpText="Total disetujui bulan ini"
                 />
-            </SimpleGrid>
+            </div>
 
             {/* --- RECENT ACTIVITY SECTION --- */}
-            <Flex direction={{ base: "column", lg: "row" }} gap={8}>
+            <div className="flex flex-col lg:flex-row gap-8">
 
                 {/* Kolom Kiri: Tabel Recent Request */}
-                <Box
-                    flex={2}
-                    bg="white"
-                    borderRadius="xl"
-                    shadow="sm"
-                    border="1px solid"
-                    borderColor="gray.200"
-                    overflow="hidden"
-                >
-                    <Flex p={6} justify="space-between" align="center" borderBottom="1px solid" borderColor="gray.100">
-                        <HStack>
-                            <Icon as={FiTrendingUp} color={BPS_BLUE} />
-                            <Heading size="md" color="gray.800">Permintaan Terbaru</Heading>
-                        </HStack>
-                        <Button size="xs" variant="ghost" asChild color="blue.600">
-                            <Link href="/admin/request">Lihat Semua</Link>
-                        </Button>
-                    </Flex>
+                <div className="flex-[2] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                        <div className="flex items-center gap-2">
+                            <FiTrendingUp className="w-5 h-5 text-[#005DA6]" />
+                            <h2 className="text-lg font-semibold text-gray-800">Permintaan Terbaru</h2>
+                        </div>
+                        <Link
+                            href="/admin/request"
+                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                            Lihat Semua
+                        </Link>
+                    </div>
 
-                    <Box overflowX="auto">
-                        <Table.Root size="sm" striped interactive>
-                            <Table.Header bg="gray.50">
-                                <Table.Row>
-                                    <Table.ColumnHeader color="gray.600">ID & Tanggal</Table.ColumnHeader>
-                                    <Table.ColumnHeader color="gray.600">Pemohon</Table.ColumnHeader>
-                                    <Table.ColumnHeader color="gray.600">Status</Table.ColumnHeader>
-                                    <Table.ColumnHeader textAlign="right"></Table.ColumnHeader>
-                                </Table.Row>
-                            </Table.Header>
-                            <Table.Body>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead className="bg-gray-50">
+                                <tr>
+                                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">ID & Tanggal</th>
+                                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Pemohon</th>
+                                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Status</th>
+                                    <th className="px-4 py-3"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
                                 {loading ? (
-                                    // Skeleton Row saat Loading
                                     [1, 2, 3].map((i) => (
-                                        <Table.Row key={i}>
-                                            <Table.Cell><Skeleton height="20px" /></Table.Cell>
-                                            <Table.Cell><Skeleton height="20px" /></Table.Cell>
-                                            <Table.Cell><Skeleton height="20px" /></Table.Cell>
-                                            <Table.Cell><Skeleton height="20px" /></Table.Cell>
-                                        </Table.Row>
+                                        <tr key={i}>
+                                            <td className="px-4 py-3"><Skeleton className="h-5 w-24" /></td>
+                                            <td className="px-4 py-3"><Skeleton className="h-5 w-32" /></td>
+                                            <td className="px-4 py-3"><Skeleton className="h-5 w-20" /></td>
+                                            <td className="px-4 py-3"><Skeleton className="h-5 w-8" /></td>
+                                        </tr>
                                     ))
                                 ) : data?.recentRequests.length === 0 ? (
-                                    <Table.Row>
-                                        <Table.Cell colSpan={4} textAlign="center" py={8} color="gray.500">
+                                    <tr>
+                                        <td colSpan={4} className="text-center py-8 text-gray-500">
                                             Belum ada data permintaan.
-                                        </Table.Cell>
-                                    </Table.Row>
+                                        </td>
+                                    </tr>
                                 ) : (
                                     data?.recentRequests.map((req) => (
-                                        <Table.Row key={req.id} _hover={{ bg: "blue.50" }}>
-                                            <Table.Cell>
-                                                <Box>
-                                                    <Text fontWeight="medium" fontSize="xs" color="gray.800">{req.id.substring(0, 8)}...</Text>
-                                                    <Text fontSize="xs" color="gray.500">
+                                        <tr key={req.id} className="hover:bg-blue-50 transition-colors">
+                                            <td className="px-4 py-3">
+                                                <div>
+                                                    <span className="font-medium text-xs text-gray-800">{req.id.substring(0, 8)}...</span>
+                                                    <p className="text-xs text-gray-500">
                                                         {new Date(req.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                                                    </Text>
-                                                </Box>
-                                            </Table.Cell>
-                                            <Table.Cell>
-                                                <Text fontSize="sm" color="gray.800">{req.user?.nama || 'Unknown'}</Text>
-                                                <Text fontSize="xs" color="gray.500">{req.user?.email}</Text>
-                                            </Table.Cell>
-                                            <Table.Cell>
-                                                <Badge
-                                                    variant="subtle"
-                                                    colorPalette={
-                                                        req.status === 'APPROVED' ? 'green' :
-                                                            req.status === 'REJECTED' ? 'red' : 'orange'
-                                                    }
+                                                    </p>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span className="text-sm text-gray-800">{req.user?.nama || 'Unknown'}</span>
+                                                <p className="text-xs text-gray-500">{req.user?.email}</p>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <StatusBadge status={req.status} />
+                                            </td>
+                                            <td className="px-4 py-3 text-right">
+                                                <Link
+                                                    href={`/admin/request/${req.id}`}
+                                                    className="p-2 text-gray-400 hover:text-gray-600 inline-block"
                                                 >
-                                                    {req.status}
-                                                </Badge>
-                                            </Table.Cell>
-                                            <Table.Cell textAlign="right">
-                                                <Button size="xs" variant="ghost" asChild>
-                                                    <Link href={`/admin/request/${req.id}`}><FiArrowRight /></Link>
-                                                </Button>
-                                            </Table.Cell>
-                                        </Table.Row>
+                                                    <FiArrowRight className="w-4 h-4" />
+                                                </Link>
+                                            </td>
+                                        </tr>
                                     ))
                                 )}
-                            </Table.Body>
-                        </Table.Root>
-                    </Box>
-                </Box>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                 {/* Kolom Kanan: Quick Action */}
-                <Box flex={1}>
-                    <Box
-                        bg={BPS_BLUE}
-                        borderRadius="xl"
-                        p={6}
-                        color="white"
-                        mb={6}
-                        bgImage="linear-gradient(to bottom right, #005DA6, #00457C)"
-                    >
-                        <Heading size="md" mb={2}>Laporan Bulanan</Heading>
-                        <Text fontSize="sm" opacity={0.9} mb={4}>
+                <div className="flex-1 flex flex-col gap-6">
+                    <div className="bg-gradient-to-br from-[#005DA6] to-[#00457C] rounded-xl p-6 text-white">
+                        <h3 className="text-lg font-semibold mb-2">Laporan Bulanan</h3>
+                        <p className="text-sm opacity-90 mb-4">
                             Unduh rekapitulasi stok masuk dan keluar periode ini.
-                        </Text>
-                        <Button bg="white" color={BPS_BLUE} size="sm" w="full" _hover={{ bg: "gray.100" }}>
+                        </p>
+                        <button className="w-full py-2 px-4 bg-white text-[#005DA6] font-medium rounded-lg hover:bg-gray-100 transition-colors text-sm">
                             Unduh Laporan Excel
-                        </Button>
-                    </Box>
+                        </button>
+                    </div>
 
-                    <Box
-                        bg="white"
-                        border="1px solid"
-                        borderColor="gray.200"
-                        borderRadius="xl"
-                        p={6}
-                    >
-                        <Heading size="sm" mb={4} color="gray.700">Status Sistem</Heading>
-                        <HStack justify="space-between" mb={2}>
-                            <Text fontSize="sm" color="gray.500">Server</Text>
-                            <Badge colorPalette="green" variant="solid">Online</Badge>
-                        </HStack>
-                        <HStack justify="space-between">
-                            <Text fontSize="sm" color="gray.500">Database</Text>
-                            <Badge colorPalette="green" variant="solid">Connected</Badge>
-                        </HStack>
-                    </Box>
-                </Box>
+                    <div className="bg-white border border-gray-200 rounded-xl p-6">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-4">Status Sistem</h4>
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm text-gray-500">Server</span>
+                            <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-500 text-white rounded-full">Online</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">Database</span>
+                            <span className="inline-flex px-2 py-1 text-xs font-medium bg-green-500 text-white rounded-full">Connected</span>
+                        </div>
+                    </div>
+                </div>
 
-            </Flex>
-        </Box>
+            </div>
+        </div>
     );
 }

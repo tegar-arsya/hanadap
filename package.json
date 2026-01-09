@@ -13,13 +13,9 @@
     "seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
-    "@chakra-ui/react": "^3.30.0",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
-    "framer-motion": "^12.24.10",
     "html5-qrcode": "^2.3.8",
     "jspdf": "^4.0.0",
     "jspdf-autotable": "^5.0.7",
@@ -30,6 +26,7 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-icons": "^5.5.0",
+    "sonner": "^2.0.7",
     "sweetalert2": "^11.26.17",
     "xlsx": "^0.18.5"
   },

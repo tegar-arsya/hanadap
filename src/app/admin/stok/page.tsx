@@ -1,25 +1,8 @@
 "use client";
 
 import { useState, useEffect, Fragment } from "react";
-import {
-    VStack,
-    HStack,
-    Button,
-    Input,
-    Table,
-    Badge,
-    IconButton,
-    Dialog,
-    Field,
-    Box,
-    Heading,
-    Text,
-    NativeSelect,
-    Card,
-    SimpleGrid,
-    Flex,
-} from "@chakra-ui/react";
 import { toaster } from "@/components/ui/toaster";
+import { Modal } from "@/components/ui/shared";
 import {
     FiPlus,
     FiTrash2,
@@ -66,12 +49,6 @@ export default function AdminStokPage() {
     const [tanggalMasuk, setTanggalMasuk] = useState(new Date().toISOString().split("T")[0]);
     const [kategoriId, setKategoriId] = useState("");
 
-    const BPS_BLUE = "#005DA6";
-
-    const showToast = (title: string, type: "success" | "error") => {
-        toaster.create({ title, type });
-    };
-
     const fetchBarang = async () => {
         try {
             const res = await fetch("/api/barang");
@@ -102,7 +79,7 @@ export default function AdminStokPage() {
 
     const handleAddBarang = async () => {
         if (!nama || !satuan) {
-            showToast("Nama dan Satuan wajib diisi", "error");
+            toaster.create({ title: "Nama dan Satuan wajib diisi", type: "error" });
             return;
         }
         try {
@@ -116,17 +93,17 @@ export default function AdminStokPage() {
                     kategoriId: kategoriId || null,
                 }),
             });
-            showToast("Barang berhasil ditambahkan", "success");
+            toaster.create({ title: "Barang berhasil ditambahkan", type: "success" });
             setNama(""); setSatuan(""); setStokMinimum("10"); setKategoriId(""); setIsOpen(false);
             fetchBarang();
         } catch (error) {
-            showToast("Gagal menambah barang", "error");
+            toaster.create({ title: "Gagal menambah barang", type: "error" });
         }
     };
 
     const handleAddStok = async () => {
         if (!selectedBarang || !jumlahStok) {
-            showToast("Jumlah stok wajib diisi", "error");
+            toaster.create({ title: "Jumlah stok wajib diisi", type: "error" });
             return;
         }
         try {
@@ -140,11 +117,11 @@ export default function AdminStokPage() {
                     tanggalMasuk,
                 }),
             });
-            showToast("Stok berhasil ditambahkan", "success");
+            toaster.create({ title: "Stok berhasil ditambahkan", type: "success" });
             setJumlahStok(""); setHargaSatuan(""); setIsStokOpen(false);
             fetchBarang();
         } catch (error) {
-            showToast("Gagal menambah stok", "error");
+            toaster.create({ title: "Gagal menambah stok", type: "error" });
         }
     };
 
@@ -152,10 +129,10 @@ export default function AdminStokPage() {
         if (!confirm("Yakin ingin menghapus barang ini beserta seluruh riwayat stoknya?")) return;
         try {
             await fetch(`/api/barang/${id}`, { method: "DELETE" });
-            showToast("Barang berhasil dihapus", "success");
+            toaster.create({ title: "Barang berhasil dihapus", type: "success" });
             fetchBarang();
         } catch (error) {
-            showToast("Gagal menghapus barang", "error");
+            toaster.create({ title: "Gagal menghapus barang", type: "error" });
         }
     };
 
@@ -175,398 +152,321 @@ export default function AdminStokPage() {
         b.nama.toLowerCase().includes(search.toLowerCase())
     );
 
+    const getStatusBadge = (stokTotal: number, stokMinimum: number) => {
+        if (stokTotal <= 0) return { color: "bg-red-100 text-red-700", label: "Habis" };
+        if (stokTotal <= stokMinimum) return { color: "bg-orange-100 text-orange-700", label: "Menipis" };
+        return { color: "bg-green-100 text-green-700", label: "Aman" };
+    };
+
     return (
-        <Box p={6} bg="gray.50" minH="100vh">
+        <div>
             {/* HEADER PAGE */}
-            <Flex justify="space-between" align="center" mb={6} flexWrap="wrap" gap={4}>
-                <Box>
-                    <Heading size="2xl" color="gray.800" mb={2}>Manajemen Stok</Heading>
-                    <Text color="gray.600" fontSize="md">Daftar inventaris barang dan pencatatan stok masuk.</Text>
-                </Box>
-                <Button
-                    bg={BPS_BLUE}
-                    color="white"
-                    _hover={{ bg: "#00457C", transform: "translateY(-1px)" }}
-                    _active={{ transform: "translateY(0)" }}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Manajemen Stok</h1>
+                    <p className="text-gray-600">Daftar inventaris barang dan pencatatan stok masuk.</p>
+                </div>
+                <button
                     onClick={() => setIsOpen(true)}
-                    size="lg"
-                    px={6}
-                    shadow="sm"
-                    transition="all 0.2s"
+                    className="flex items-center gap-2 px-6 py-3 bg-[#005DA6] text-white rounded-lg font-medium hover:bg-[#00457C] transition-all shadow-sm hover:-translate-y-0.5"
                 >
-                    <FiPlus style={{ marginRight: "8px" }} /> Tambah Barang
-                </Button>
-            </Flex>
+                    <FiPlus className="w-4 h-4" />
+                    Tambah Barang
+                </button>
+            </div>
 
             {/* FILTER & SEARCH */}
-            <Card.Root bg="white" shadow="md" mb={6} borderRadius="lg">
-                <Card.Body p={5}>
-                    <HStack gap={4}>
-                        <Box flex={1}>
-                            <HStack
-                                bg="gray.50"
-                                px={4} 
-                                py={3}
-                                borderRadius="lg"
-                                border="2px solid"
-                                borderColor="gray.200"
-                                _focusWithin={{ 
-                                    borderColor: BPS_BLUE, 
-                                    bg: "white",
-                                    shadow: "0 0 0 3px rgba(0, 93, 166, 0.1)"
-                                }}
-                                transition="all 0.2s"
-                            >
-                                <FiSearch color="#718096" size={20} />
-                                <Input
-                                    placeholder="Cari nama barang..."
-                                    border="none"
-                                    _focus={{ outline: "none" }}
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                    p={0}
-                                    fontSize="md"
-                                />
-                            </HStack>
-                        </Box>
-                        <Button 
-                            variant="outline" 
-                            color="gray.700" 
-                            borderColor="gray.300"
-                            _hover={{ bg: "gray.50", borderColor: "gray.400" }}
-                            px={6}
-                            size="lg"
-                        >
-                            <FiFilter style={{ marginRight: "6px" }} /> Filter
-                        </Button>
-                    </HStack>
-                </Card.Body>
-            </Card.Root>
+            <div className="bg-white rounded-lg shadow-md p-5 mb-6">
+                <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                        <div className="flex items-center gap-3 bg-gray-50 px-4 py-3 rounded-lg border-2 border-gray-200 focus-within:border-[#005DA6] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(0,93,166,0.1)] transition-all">
+                            <FiSearch className="w-5 h-5 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Cari nama barang..."
+                                className="flex-1 bg-transparent border-none outline-none text-gray-700 placeholder:text-gray-400"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <button className="flex items-center gap-2 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-colors">
+                        <FiFilter className="w-4 h-4" />
+                        Filter
+                    </button>
+                </div>
+            </div>
 
             {/* TABLE DATA */}
-            <Card.Root bg="white" shadow="md" borderRadius="lg" overflow="hidden">
-                <Box overflowX="auto">
-                    <Table.Root size="lg" variant="line">
-                        <Table.Header>
-                            <Table.Row bg="gray.50" borderBottom="2px solid" borderColor="gray.200">
-                                <Table.ColumnHeader color="gray.700" fontWeight="semibold" fontSize="sm" py={4}>BARANG</Table.ColumnHeader>
-                                <Table.ColumnHeader color="gray.700" fontWeight="semibold" fontSize="sm">KATEGORI</Table.ColumnHeader>
-                                <Table.ColumnHeader color="gray.700" fontWeight="semibold" fontSize="sm">SATUAN</Table.ColumnHeader>
-                                <Table.ColumnHeader color="gray.700" fontWeight="semibold" fontSize="sm" textAlign="right">TOTAL STOK</Table.ColumnHeader>
-                                <Table.ColumnHeader color="gray.700" fontWeight="semibold" fontSize="sm" textAlign="right">MIN. STOK</Table.ColumnHeader>
-                                <Table.ColumnHeader color="gray.700" fontWeight="semibold" fontSize="sm">STATUS</Table.ColumnHeader>
-                                <Table.ColumnHeader color="gray.700" fontWeight="semibold" fontSize="sm" textAlign="right">AKSI</Table.ColumnHeader>
-                            </Table.Row>
-                        </Table.Header>
-                        <Table.Body>
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead>
+                            <tr className="bg-gray-50 border-b-2 border-gray-200">
+                                <th className="text-left px-4 py-4 text-sm font-semibold text-gray-700">BARANG</th>
+                                <th className="text-left px-4 py-4 text-sm font-semibold text-gray-700">KATEGORI</th>
+                                <th className="text-left px-4 py-4 text-sm font-semibold text-gray-700">SATUAN</th>
+                                <th className="text-right px-4 py-4 text-sm font-semibold text-gray-700">TOTAL STOK</th>
+                                <th className="text-right px-4 py-4 text-sm font-semibold text-gray-700">MIN. STOK</th>
+                                <th className="text-left px-4 py-4 text-sm font-semibold text-gray-700">STATUS</th>
+                                <th className="text-right px-4 py-4 text-sm font-semibold text-gray-700">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
                             {loading ? (
-                                <Table.Row>
-                                    <Table.Cell colSpan={7} textAlign="center" py={12} color="gray.500">Memuat data...</Table.Cell>
-                                </Table.Row>
+                                <tr>
+                                    <td colSpan={7} className="text-center py-12 text-gray-500">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <svg className="animate-spin h-5 w-5 text-[#005DA6]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span>Memuat data...</span>
+                                        </div>
+                                    </td>
+                                </tr>
                             ) : filteredBarang.length === 0 ? (
-                                <Table.Row>
-                                    <Table.Cell colSpan={7} textAlign="center" py={12}>
-                                        <VStack color="gray.400" gap={3}>
-                                            <FiPackage size={48} />
-                                            <Text fontSize="lg">Data barang tidak ditemukan.</Text>
-                                        </VStack>
-                                    </Table.Cell>
-                                </Table.Row>
+                                <tr>
+                                    <td colSpan={7} className="text-center py-12">
+                                        <div className="flex flex-col items-center gap-3 text-gray-400">
+                                            <FiPackage className="w-12 h-12" />
+                                            <span className="text-lg">Data barang tidak ditemukan.</span>
+                                        </div>
+                                    </td>
+                                </tr>
                             ) : (
                                 filteredBarang.map((barang) => {
                                     const isExpanded = expanded.has(barang.id);
-                                    const statusColor = barang.stokTotal <= 0 ? "red" : barang.stokTotal <= barang.stokMinimum ? "orange" : "green";
-                                    const statusLabel = barang.stokTotal <= 0 ? "Habis" : barang.stokTotal <= barang.stokMinimum ? "Menipis" : "Aman";
+                                    const status = getStatusBadge(barang.stokTotal, barang.stokMinimum);
 
                                     return (
                                         <Fragment key={barang.id}>
-                                            <Table.Row 
-                                                _hover={{ bg: "gray.50" }}
-                                                transition="background 0.15s"
-                                            >
-                                                <Table.Cell fontWeight="semibold" color="gray.900" fontSize="md" py={4}>{barang.nama}</Table.Cell>
-                                                <Table.Cell color="gray.600" fontSize="md">{barang.kategori?.nama || "-"}</Table.Cell>
-                                                <Table.Cell color="gray.600" fontSize="md">{barang.satuan}</Table.Cell>
-                                                <Table.Cell textAlign="right" fontWeight="bold" color="gray.900" fontSize="md">{barang.stokTotal}</Table.Cell>
-                                                <Table.Cell textAlign="right" color="gray.600" fontSize="md">{barang.stokMinimum}</Table.Cell>
-                                                <Table.Cell>
-                                                    <Badge 
-                                                        colorPalette={statusColor} 
-                                                        variant="subtle"
-                                                        px={3}
-                                                        py={1}
-                                                        borderRadius="full"
-                                                        fontSize="xs"
-                                                        fontWeight="semibold"
-                                                    >
-                                                        {statusLabel}
-                                                    </Badge>
-                                                </Table.Cell>
-                                                <Table.Cell textAlign="right">
-                                                    <HStack justify="end" gap={2}>
-                                                        <IconButton
-                                                            aria-label="Toggle" 
-                                                            size="sm" 
-                                                            variant="ghost"
+                                            <tr className="hover:bg-gray-50 transition-colors">
+                                                <td className="px-4 py-4 font-semibold text-gray-900">{barang.nama}</td>
+                                                <td className="px-4 py-4 text-gray-600">{barang.kategori?.nama || "-"}</td>
+                                                <td className="px-4 py-4 text-gray-600">{barang.satuan}</td>
+                                                <td className="px-4 py-4 text-right font-bold text-gray-900">{barang.stokTotal}</td>
+                                                <td className="px-4 py-4 text-right text-gray-600">{barang.stokMinimum}</td>
+                                                <td className="px-4 py-4">
+                                                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${status.color}`}>
+                                                        {status.label}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
                                                             onClick={() => toggleExpanded(barang.id)}
-                                                            color="gray.600"
-                                                            _hover={{ bg: "gray.100" }}
+                                                            className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
                                                         >
-                                                            {isExpanded ? <FiChevronDown size={18} /> : <FiChevronRight size={18} />}
-                                                        </IconButton>
-                                                        <Button
-                                                            size="sm" 
-                                                            bg={BPS_BLUE}
-                                                            color="white"
-                                                            _hover={{ bg: "#00457C" }}
+                                                            {isExpanded ? <FiChevronDown className="w-4 h-4" /> : <FiChevronRight className="w-4 h-4" />}
+                                                        </button>
+                                                        <button
                                                             onClick={() => { setSelectedBarang(barang); setIsStokOpen(true); }}
-                                                            px={4}
+                                                            className="px-4 py-1.5 text-sm bg-[#005DA6] text-white rounded-lg hover:bg-[#00457C] transition-colors"
                                                         >
                                                             + Stok
-                                                        </Button>
-                                                        <IconButton
-                                                            aria-label="Delete" 
-                                                            size="sm" 
-                                                            variant="ghost" 
-                                                            colorPalette="red"
+                                                        </button>
+                                                        <button
                                                             onClick={() => handleDeleteBarang(barang.id)}
-                                                            _hover={{ bg: "red.50" }}
+                                                            className="p-2 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                                                         >
-                                                            <FiTrash2 size={16} />
-                                                        </IconButton>
-                                                    </HStack>
-                                                </Table.Cell>
-                                            </Table.Row>
+                                                            <FiTrash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
 
                                             {/* DETAIL BATCH (EXPANDED ROW) */}
                                             {isExpanded && (
-                                                <Table.Row bg="blue.50">
-                                                    <Table.Cell colSpan={7} p={5}>
-                                                        <Card.Root size="sm" bg="white" shadow="sm" borderRadius="md">
-                                                            <Card.Body p={4}>
-                                                                <Text fontSize="xs" fontWeight="bold" color="gray.600" mb={3} textTransform="uppercase" letterSpacing="wide">
-                                                                    Riwayat Stok Masuk (FIFO)
-                                                                </Text>
-                                                                {barang.batches && barang.batches.length > 0 ? (
-                                                                    <Table.Root size="sm">
-                                                                        <Table.Header>
-                                                                            <Table.Row bg="gray.50">
-                                                                                <Table.ColumnHeader fontSize="xs" color="gray.600">Tgl Masuk</Table.ColumnHeader>
-                                                                                <Table.ColumnHeader fontSize="xs" color="gray.600" textAlign="right">Awal</Table.ColumnHeader>
-                                                                                <Table.ColumnHeader fontSize="xs" color="gray.600" textAlign="right">Sisa</Table.ColumnHeader>
-                                                                                <Table.ColumnHeader fontSize="xs" color="gray.600" textAlign="right">Harga/Unit</Table.ColumnHeader>
-                                                                            </Table.Row>
-                                                                        </Table.Header>
-                                                                        <Table.Body>
-                                                                            {barang.batches.map(batch => (
-                                                                                <Table.Row key={batch.id}>
-                                                                                    <Table.Cell fontSize="sm" color="gray.700">{formatDate(batch.tanggalMasuk)}</Table.Cell>
-                                                                                    <Table.Cell fontSize="sm" color="gray.600" textAlign="right">{batch.jumlah}</Table.Cell>
-                                                                                    <Table.Cell fontSize="sm" textAlign="right" fontWeight="semibold" color={BPS_BLUE}>{batch.sisaJumlah}</Table.Cell>
-                                                                                    <Table.Cell fontSize="sm" color="gray.600" textAlign="right">{batch.hargaSatuan ? `Rp ${batch.hargaSatuan.toLocaleString()}` : '-'}</Table.Cell>
-                                                                                </Table.Row>
-                                                                            ))}
-                                                                        </Table.Body>
-                                                                    </Table.Root>
-                                                                ) : (
-                                                                    <Text fontSize="sm" color="gray.500">Belum ada data batch stok.</Text>
-                                                                )}
-                                                            </Card.Body>
-                                                        </Card.Root>
-                                                    </Table.Cell>
-                                                </Table.Row>
+                                                <tr className="bg-blue-50">
+                                                    <td colSpan={7} className="p-5">
+                                                        <div className="bg-white rounded-md shadow-sm p-4">
+                                                            <h4 className="text-xs font-bold text-gray-600 mb-3 uppercase tracking-wide">
+                                                                Riwayat Stok Masuk (FIFO)
+                                                            </h4>
+                                                            {barang.batches && barang.batches.length > 0 ? (
+                                                                <table className="w-full">
+                                                                    <thead>
+                                                                        <tr className="bg-gray-50">
+                                                                            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-600">Tgl Masuk</th>
+                                                                            <th className="text-right px-3 py-2 text-xs font-semibold text-gray-600">Awal</th>
+                                                                            <th className="text-right px-3 py-2 text-xs font-semibold text-gray-600">Sisa</th>
+                                                                            <th className="text-right px-3 py-2 text-xs font-semibold text-gray-600">Harga/Unit</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody className="divide-y divide-gray-100">
+                                                                        {barang.batches.map(batch => (
+                                                                            <tr key={batch.id}>
+                                                                                <td className="px-3 py-2 text-sm text-gray-700">{formatDate(batch.tanggalMasuk)}</td>
+                                                                                <td className="px-3 py-2 text-sm text-gray-600 text-right">{batch.jumlah}</td>
+                                                                                <td className="px-3 py-2 text-sm text-right font-semibold text-[#005DA6]">{batch.sisaJumlah}</td>
+                                                                                <td className="px-3 py-2 text-sm text-gray-600 text-right">
+                                                                                    {batch.hargaSatuan ? `Rp ${batch.hargaSatuan.toLocaleString()}` : '-'}
+                                                                                </td>
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            ) : (
+                                                                <p className="text-sm text-gray-500">Belum ada data batch stok.</p>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                             )}
                                         </Fragment>
                                     );
                                 })
                             )}
-                        </Table.Body>
-                    </Table.Root>
-                </Box>
-            </Card.Root>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-            {/* --- DIALOG TAMBAH BARANG --- */}
-            <Dialog.Root open={isOpen} onOpenChange={(e) => setIsOpen(e.open)}>
-                <Dialog.Backdrop />
-                <Dialog.Positioner>
-                    <Dialog.Content maxW="500px" borderRadius="xl" shadow="xl">
-                        <Dialog.Header borderBottom="1px solid" borderColor="gray.200" pb={4}>
-                            <Dialog.Title fontSize="xl" fontWeight="bold" color="gray.800">Tambah Barang Baru</Dialog.Title>
-                            <Dialog.CloseTrigger />
-                        </Dialog.Header>
-                        <Dialog.Body py={6}>
-                            <VStack gap={5}>
-                                <Field.Root required w="full">
-                                    <Field.Label fontWeight="semibold" color="gray.700" mb={2}>Nama Barang</Field.Label>
-                                    <Input
-                                        placeholder="Contoh: Kertas A4"
-                                        value={nama} 
-                                        onChange={(e) => setNama(e.target.value)}
-                                        size="lg"
-                                        borderRadius="lg"
-                                        border="2px solid"
-                                        borderColor="gray.200"
-                                        _focus={{ borderColor: BPS_BLUE, shadow: "0 0 0 3px rgba(0, 93, 166, 0.1)" }}
-                                    />
-                                </Field.Root>
+            {/* --- MODAL TAMBAH BARANG --- */}
+            <Modal
+                isOpen={isOpen}
+                onClose={() => setIsOpen(false)}
+                title="Tambah Barang Baru"
+                size="lg"
+                footer={
+                    <>
+                        <button
+                            onClick={() => setIsOpen(false)}
+                            className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            onClick={handleAddBarang}
+                            className="px-6 py-2.5 bg-[#005DA6] text-white rounded-lg hover:bg-[#00457C] transition-colors"
+                        >
+                            Simpan
+                        </button>
+                    </>
+                }
+            >
+                <div className="flex flex-col gap-5">
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Nama Barang <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="Contoh: Kertas A4"
+                            value={nama}
+                            onChange={(e) => setNama(e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#005DA6] focus:shadow-[0_0_0_3px_rgba(0,93,166,0.1)] transition-all"
+                        />
+                    </div>
 
-                                <SimpleGrid columns={2} gap={4} w="full">
-                                    <Field.Root required>
-                                        <Field.Label fontWeight="semibold" color="gray.700" mb={2}>Satuan</Field.Label>
-                                        <Input
-                                            placeholder="Rim, Pcs..."
-                                            value={satuan} 
-                                            onChange={(e) => setSatuan(e.target.value)}
-                                            size="lg"
-                                            borderRadius="lg"
-                                            border="2px solid"
-                                            borderColor="gray.200"
-                                            _focus={{ borderColor: BPS_BLUE, shadow: "0 0 0 3px rgba(0, 93, 166, 0.1)" }}
-                                        />
-                                    </Field.Root>
-                                    <Field.Root>
-                                        <Field.Label fontWeight="semibold" color="gray.700" mb={2}>Stok Minimum</Field.Label>
-                                        <Input
-                                            type="number"
-                                            value={stokMinimum} 
-                                            onChange={(e) => setStokMinimum(e.target.value)}
-                                            size="lg"
-                                            borderRadius="lg"
-                                            border="2px solid"
-                                            borderColor="gray.200"
-                                            _focus={{ borderColor: BPS_BLUE, shadow: "0 0 0 3px rgba(0, 93, 166, 0.1)" }}
-                                        />
-                                    </Field.Root>
-                                </SimpleGrid>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Satuan <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Rim, Pcs..."
+                                value={satuan}
+                                onChange={(e) => setSatuan(e.target.value)}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#005DA6] focus:shadow-[0_0_0_3px_rgba(0,93,166,0.1)] transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Stok Minimum
+                            </label>
+                            <input
+                                type="number"
+                                value={stokMinimum}
+                                onChange={(e) => setStokMinimum(e.target.value)}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#005DA6] focus:shadow-[0_0_0_3px_rgba(0,93,166,0.1)] transition-all"
+                            />
+                        </div>
+                    </div>
 
-                                <Field.Root w="full">
-                                    <Field.Label fontWeight="semibold" color="gray.700" mb={2}>Kategori</Field.Label>
-                                    <NativeSelect.Root size="lg">
-                                        <NativeSelect.Field
-                                            placeholder="Pilih kategori..."
-                                            value={kategoriId}
-                                            onChange={(e) => setKategoriId(e.target.value)}
-                                            borderRadius="lg"
-                                            border="2px solid"
-                                            borderColor="gray.200"
-                                            _focus={{ borderColor: BPS_BLUE, shadow: "0 0 0 3px rgba(0, 93, 166, 0.1)" }}
-                                        >
-                                            {kategoriList.map((k) => (
-                                                <option key={k.id} value={k.id}>{k.nama}</option>
-                                            ))}
-                                        </NativeSelect.Field>
-                                    </NativeSelect.Root>
-                                </Field.Root>
-                            </VStack>
-                        </Dialog.Body>
-                        <Dialog.Footer borderTop="1px solid" borderColor="gray.200" pt={4} gap={3}>
-                            <Button 
-                                variant="outline" 
-                                onClick={() => setIsOpen(false)}
-                                size="lg"
-                                px={6}
-                                borderColor="gray.300"
-                                _hover={{ bg: "gray.50" }}
-                            >
-                                Batal
-                            </Button>
-                            <Button 
-                                bg={BPS_BLUE} 
-                                color="white" 
-                                onClick={handleAddBarang}
-                                size="lg"
-                                px={6}
-                                _hover={{ bg: "#00457C" }}
-                            >
-                                Simpan
-                            </Button>
-                        </Dialog.Footer>
-                    </Dialog.Content>
-                </Dialog.Positioner>
-            </Dialog.Root>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Kategori
+                        </label>
+                        <select
+                            value={kategoriId}
+                            onChange={(e) => setKategoriId(e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#005DA6] focus:shadow-[0_0_0_3px_rgba(0,93,166,0.1)] transition-all bg-white"
+                        >
+                            <option value="">Pilih kategori...</option>
+                            {kategoriList.map((k) => (
+                                <option key={k.id} value={k.id}>{k.nama}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            </Modal>
 
-            {/* --- DIALOG TAMBAH STOK --- */}
-            <Dialog.Root open={isStokOpen} onOpenChange={(e) => setIsStokOpen(e.open)}>
-                <Dialog.Backdrop />
-                <Dialog.Positioner>
-                    <Dialog.Content maxW="500px" borderRadius="xl" shadow="xl">
-                        <Dialog.Header borderBottom="1px solid" borderColor="gray.200" pb={4}>
-                            <Dialog.Title fontSize="xl" fontWeight="bold" color="gray.800">
-                                Tambah Stok: {selectedBarang?.nama}
-                            </Dialog.Title>
-                            <Dialog.CloseTrigger />
-                        </Dialog.Header>
-                        <Dialog.Body py={6}>
-                            <VStack gap={5}>
-                                <Field.Root required w="full">
-                                    <Field.Label fontWeight="semibold" color="gray.700" mb={2}>Jumlah Masuk</Field.Label>
-                                    <Input
-                                        type="number"
-                                        placeholder="0"
-                                        value={jumlahStok} 
-                                        onChange={(e) => setJumlahStok(e.target.value)}
-                                        size="lg"
-                                        borderRadius="lg"
-                                        border="2px solid"
-                                        borderColor="gray.200"
-                                        _focus={{ borderColor: BPS_BLUE, shadow: "0 0 0 3px rgba(0, 93, 166, 0.1)" }}
-                                    />
-                                </Field.Root>
+            {/* --- MODAL TAMBAH STOK --- */}
+            <Modal
+                isOpen={isStokOpen}
+                onClose={() => setIsStokOpen(false)}
+                title={`Tambah Stok: ${selectedBarang?.nama || ""}`}
+                size="lg"
+                footer={
+                    <>
+                        <button
+                            onClick={() => setIsStokOpen(false)}
+                            className="px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            onClick={handleAddStok}
+                            className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                            Tambah Stok
+                        </button>
+                    </>
+                }
+            >
+                <div className="flex flex-col gap-5">
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Jumlah Masuk <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="number"
+                            placeholder="0"
+                            value={jumlahStok}
+                            onChange={(e) => setJumlahStok(e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#005DA6] focus:shadow-[0_0_0_3px_rgba(0,93,166,0.1)] transition-all"
+                        />
+                    </div>
 
-                                <Field.Root w="full">
-                                    <Field.Label fontWeight="semibold" color="gray.700" mb={2}>Harga Satuan (Opsional)</Field.Label>
-                                    <Input
-                                        type="number"
-                                        placeholder="Rp 0"
-                                        value={hargaSatuan} 
-                                        onChange={(e) => setHargaSatuan(e.target.value)}
-                                        size="lg"
-                                        borderRadius="lg"
-                                        border="2px solid"
-                                        borderColor="gray.200"
-                                        _focus={{ borderColor: BPS_BLUE, shadow: "0 0 0 3px rgba(0, 93, 166, 0.1)" }}
-                                    />
-                                </Field.Root>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Harga Satuan (Opsional)
+                        </label>
+                        <input
+                            type="number"
+                            placeholder="Rp 0"
+                            value={hargaSatuan}
+                            onChange={(e) => setHargaSatuan(e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#005DA6] focus:shadow-[0_0_0_3px_rgba(0,93,166,0.1)] transition-all"
+                        />
+                    </div>
 
-                                <Field.Root w="full">
-                                    <Field.Label fontWeight="semibold" color="gray.700" mb={2}>Tanggal Masuk</Field.Label>
-                                    <Input
-                                        type="date"
-                                        value={tanggalMasuk} 
-                                        onChange={(e) => setTanggalMasuk(e.target.value)}
-                                        size="lg"
-                                        borderRadius="lg"
-                                        border="2px solid"
-                                        borderColor="gray.200"
-                                        _focus={{ borderColor: BPS_BLUE, shadow: "0 0 0 3px rgba(0, 93, 166, 0.1)" }}
-                                    />
-                                </Field.Root>
-                            </VStack>
-                        </Dialog.Body>
-                        <Dialog.Footer borderTop="1px solid" borderColor="gray.200" pt={4} gap={3}>
-                            <Button 
-                                variant="outline" 
-                                onClick={() => setIsStokOpen(false)}
-                                size="lg"
-                                px={6}
-                                borderColor="gray.300"
-                                _hover={{ bg: "gray.50" }}
-                            >
-                                Batal
-                            </Button>
-                            <Button 
-                                colorPalette="green" 
-                                onClick={handleAddStok}
-                                size="lg"
-                                px={6}
-                            >
-                                Tambah Stok
-                            </Button>
-                        </Dialog.Footer>
-                    </Dialog.Content>
-                </Dialog.Positioner>
-            </Dialog.Root>
-
-        </Box>
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Tanggal Masuk
+                        </label>
+                        <input
+                            type="date"
+                            value={tanggalMasuk}
+                            onChange={(e) => setTanggalMasuk(e.target.value)}
+                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-[#005DA6] focus:shadow-[0_0_0_3px_rgba(0,93,166,0.1)] transition-all"
+                        />
+                    </div>
+                </div>
+            </Modal>
+        </div>
     );
 }
